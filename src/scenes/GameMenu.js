@@ -9,7 +9,7 @@ export default class GameMenu extends Phaser.Scene {
         const centerY = this.cameras.main.centerY;
 
         // Add title text
-        this.add.text(centerX, centerY - 100, 'Endless Runner', {
+        this.add.text(centerX, centerY - 100, 'Flibberwoo', {
             fontSize: '48px',
             fill: '#fff'
         }).setOrigin(0.5);
