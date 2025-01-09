@@ -1,0 +1,7 @@
+{
+  "extends": ["@parcel/config-default"],
+  "resolvers": ["@parcel/resolver-default"],
+  "transformers": {
+    "*.{png,jpg,jpeg}": ["@parcel/transformer-raw"]
+  }
+}
