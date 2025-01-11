@@ -26,10 +26,8 @@ export default class GameMenu extends Phaser.Scene {
         .on('pointerover', () => startButton.setStyle({ fill: '#ff0' }))
         .on('pointerout', () => startButton.setStyle({ fill: '#fff' }))
         .on('pointerdown', () => {
-            // This will be used later to start the game
-            console.log('Game Start clicked!');
-            // You can add scene transition here:
-            // this.scene.start('GameScene');
+            
+            this.scene.start('GameScene');
         });
     }
 }
