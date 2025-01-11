@@ -1,3 +1,4 @@
+// src/main.js
 import Phaser from "phaser";
 import GameMenu from "./scenes/GameMenu";
 import GameScene from "./scenes/GameScene";
@@ -22,4 +23,10 @@ const config = {
     }
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// Add some global error handling
+window.onerror = function(msg, src, lineNo, colNo, error) {
+    console.error('Game Error:', { msg, src, lineNo, colNo, error });
+    return false;
+};
