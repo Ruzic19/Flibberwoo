@@ -1,3 +1,5 @@
+import Phaser from 'phaser';
+
 export default class GameMenu extends Phaser.Scene {
     constructor() {
         super({ key: 'GameMenu' });
@@ -26,7 +28,7 @@ export default class GameMenu extends Phaser.Scene {
         .on('pointerover', () => startButton.setStyle({ fill: '#ff0' }))
         .on('pointerout', () => startButton.setStyle({ fill: '#fff' }))
         .on('pointerdown', () => {
-            
+            console.log('Starting GameScene');
             this.scene.start('GameScene');
         });
     }

@@ -8,7 +8,7 @@ const config = {
     height: 450, // Reduced height to remove the black space
     parent: 'game',
     backgroundColor: '#000000',
-    scene: [GameMenu, GameScene],
+    scene: [GameMenu, GameScene],  // Make sure GameMenu is first
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
