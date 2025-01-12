@@ -4,16 +4,16 @@ import GameMenu from "./scenes/GameMenu";
 import GameScene from "./scenes/GameScene";
 
 const config = {
-    type: Phaser.CANVAS,  // Using CANVAS renderer for better pixel art rendering
+    type: Phaser.CANVAS,
     width: 928,
     height: 450,
     parent: 'game',
     backgroundColor: '#000000',
     scene: [GameMenu, GameScene],
     render: {
-        pixelArt: true,  // Enable pixel art mode globally
-        antialias: false,  // Disable antialiasing
-        roundPixels: true  // Round pixel positions to prevent subpixel rendering
+        pixelArt: true,
+        antialias: false,
+        roundPixels: true
     },
     scale: {
         mode: Phaser.Scale.FIT,
@@ -25,7 +25,12 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: false
+            debug: true,
+            debugShowBody: true,
+            debugShowStaticBody: true,
+            debugShowVelocity: false,  // This might be causing the green lines
+            debugBodyColor: 0xff00ff,
+            debugStaticBodyColor: 0xff00ff
         }
     }
 };

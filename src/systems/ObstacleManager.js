@@ -1,4 +1,3 @@
-// src/systems/ObstacleManager.js
 import { GAME_CONFIG } from '../config/gameConfig';
 import { OBSTACLE_CONFIG } from '../config/obstacleConfig';
 import { Obstacle } from '../entities/obstacles/Obstacle';
@@ -20,59 +19,51 @@ export class ObstacleManager {
         this.remainingGroupSize = 0;
         
         this.debugLog('Initializing obstacle manager');
+        
+        // Log all existing physics bodies before pool creation
+        this.debugLog('Physics bodies before pool creation:', 
+            this.scene.physics.world.bodies.entries.map(body => ({
+                x: body.x,
+                y: body.y,
+                width: body.width,
+                height: body.height,
+                key: body.gameObject?.texture?.key || 'unknown',
+                type: body.gameObject?.constructor?.name || 'unknown',
+                depth: body.gameObject?.depth || 0,
+                active: body.gameObject?.active || false,
+                visible: body.gameObject?.visible || false
+            }))
+        );
+        
         this.initializePool();
-    }
-
-    calculateSpawnDelay() {
-        let distance;
         
-        // Check if we're in group mode or should start a new group
-        if (!this.groupMode && Math.random() < OBSTACLE_CONFIG.SPAWN.GROUP_CHANCE) {
-            this.groupMode = true;
-            this.remainingGroupSize = Math.floor(
-                Math.random() * 
-                (OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN + 1) + 
-                OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN
-            );
-            this.debugLog('Starting new group', { size: this.remainingGroupSize });
-        }
-
-        if (this.groupMode) {
-            // In a group, use tight spacing
-            distance = Math.random() * 
-                (OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN) + 
-                OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN;
-            
-            this.remainingGroupSize--;
-            if (this.remainingGroupSize <= 0) {
-                this.groupMode = false;
-                // Add extra gap after group
-                distance += Math.random() * 
-                    (OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN) + 
-                    OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN;
-            }
-        } else {
-            // Not in a group, use normal gap spacing
-            distance = Math.random() * 
-                (OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN) + 
-                OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN;
-        }
-
-        // Calculate delay based on distance and current speed
-        const delay = (distance / this.currentSpeed) * 1000;
+        // Find and log any graphics objects that might be causing the green lines
+        const allGraphics = this.scene.children.list
+            .filter(child => child instanceof Phaser.GameObjects.Graphics);
         
-        return { distance, delay };
-    }
-
-    calculateBaseSpeed() {
-        // Calculate speed based on game config and parallax effect
-        const baseGameSpeed = GAME_CONFIG.SCROLL_SPEED.BASE;
-        const parallaxFactor = 0.5; // Maximum parallax factor for foreground
-        return baseGameSpeed * parallaxFactor * window.devicePixelRatio * 20; // Scale factor to match visual speed
-    }
-
-    getCurrentSpeed() {
-        return this.calculateBaseSpeed() * this.speedMultiplier;
+        if (allGraphics.length > 0) {
+            this.debugLog('Found graphics objects:', allGraphics.map(g => ({
+                depth: g.depth,
+                visible: g.visible,
+                active: g.active,
+                position: { x: g.x, y: g.y }
+            })));
+        }
+        
+        // Log all physics bodies after pool creation
+        this.debugLog('Physics bodies after pool creation:', 
+            this.scene.physics.world.bodies.entries.map(body => ({
+                x: body.x,
+                y: body.y,
+                width: body.width,
+                height: body.height,
+                key: body.gameObject?.texture?.key || 'unknown',
+                type: body.gameObject?.constructor?.name || 'unknown',
+                depth: body.gameObject?.depth || 0,
+                active: body.gameObject?.active || false,
+                visible: body.gameObject?.visible || false
+            }))
+        );
     }
 
     debugLog(message, data = null) {
@@ -90,12 +81,54 @@ export class ObstacleManager {
         });
     }
 
-    getInactiveObstacle(type) {
-        return this.obstacles[type].find(obs => !obs.isActive());
+    calculateSpawnDelay() {
+        let distance;
+        
+        if (!this.groupMode && Math.random() < OBSTACLE_CONFIG.SPAWN.GROUP_CHANCE) {
+            this.groupMode = true;
+            this.remainingGroupSize = Math.floor(
+                Math.random() * 
+                (OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN + 1) + 
+                OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN
+            );
+            this.debugLog('Starting new group', { size: this.remainingGroupSize });
+        }
+
+        if (this.groupMode) {
+            distance = Math.random() * 
+                (OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN) + 
+                OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN;
+            
+            this.remainingGroupSize--;
+            if (this.remainingGroupSize <= 0) {
+                this.groupMode = false;
+                distance += Math.random() * 
+                    (OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN) + 
+                    OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN;
+            }
+        } else {
+            distance = Math.random() * 
+                (OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN) + 
+                OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN;
+        }
+
+        const delay = (distance / this.currentSpeed) * 1000;
+        
+        return { distance, delay };
     }
 
-    getRandomDistance() {
-        return Math.random() * (this.currentMaxDistance - this.currentMinDistance) + this.currentMinDistance;
+    calculateBaseSpeed() {
+        const baseGameSpeed = GAME_CONFIG.SCROLL_SPEED.BASE;
+        const parallaxFactor = 0.5;
+        return baseGameSpeed * parallaxFactor * window.devicePixelRatio * 20;
+    }
+
+    getCurrentSpeed() {
+        return this.calculateBaseSpeed() * this.speedMultiplier;
+    }
+
+    getInactiveObstacle(type) {
+        return this.obstacles[type].find(obs => !obs.isActive());
     }
 
     spawnObstacle() {
@@ -121,7 +154,6 @@ export class ObstacleManager {
         
         obstacle.enable(x, y, this.currentSpeed);
         
-        // Calculate next spawn time
         const { distance, delay } = this.calculateSpawnDelay();
         this.nextSpawnTime = currentTime + delay;
 
@@ -145,10 +177,9 @@ export class ObstacleManager {
             OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED
         );
         
-        // Also adjust group spacing as difficulty increases
         OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN = Math.max(
             OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN - distanceDecrement,
-            100  // Hard minimum to prevent overlap
+            100
         );
         OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX = Math.max(
             OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX - distanceDecrement,

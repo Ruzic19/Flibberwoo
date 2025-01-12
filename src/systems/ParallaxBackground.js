@@ -1,33 +1,36 @@
-// src/systems/ParallaxBackground.js
 import { GAME_CONFIG } from '../config/gameConfig';
 
 export default class ParallaxBackground {
-    debug(message, data = null) {
-        console.log(`[ParallaxBackground] ${message}`, data || '');
-    }
-
     constructor(scene, layerInfo) {
         this.scene = scene;
         this.layers = [];
+        console.log('[ParallaxBackground] Starting layer creation');
         this.createLayers(layerInfo);
     }
 
+
     createLayers(layerInfo) {
-        this.debug('Starting layer creation');
-        
         const scale = this.scene.cameras.main.width / GAME_CONFIG.ORIGINAL_WIDTH;
-        this.debug('Calculated scale:', scale);
+        console.log('[ParallaxBackground] Scale:', scale);
+        console.log('[ParallaxBackground] Physics bodies before layer creation:', 
+            this.scene.physics.world.bodies.entries.map(body => ({
+                x: body.x,
+                y: body.y,
+                key: body.gameObject?.texture?.key || 'unknown',
+                active: body.gameObject?.active || false
+            }))
+        );
 
         [...layerInfo].reverse().forEach((layerData, index) => {
+            console.log(`[ParallaxBackground] Creating layer: ${layerData.key} at depth ${index}`);
             if (this.scene.textures.exists(layerData.key)) {
                 try {
                     for (let i = 0; i < 2; i++) {
                         const x = i * GAME_CONFIG.ORIGINAL_WIDTH * scale;
-                        const sprite = this.scene.add.sprite(
-                            Math.round(x), 
-                            Math.round(-GAME_CONFIG.VERTICAL_OFFSET), 
-                            layerData.key
-                        )
+                        const y = Math.round(-GAME_CONFIG.VERTICAL_OFFSET);
+                        console.log(`[ParallaxBackground] Creating sprite at position:`, { x, y, key: layerData.key });
+                        
+                        const sprite = this.scene.add.sprite(x, y, layerData.key)
                             .setOrigin(0, 0)
                             .setScale(scale)
                             .setDepth(index);
@@ -42,10 +45,10 @@ export default class ParallaxBackground {
                         this.layers.push(sprite);
                     }
                 } catch (error) {
-                    console.error(`Error creating ${layerData.key}:`, error);
+                    console.error(`[ParallaxBackground] Error creating ${layerData.key}:`, error);
                 }
             } else {
-                this.debug(`Texture does not exist for ${layerData.key}`);
+                console.warn(`[ParallaxBackground] Texture not found: ${layerData.key}`);
             }
         });
     }
