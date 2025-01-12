@@ -1,14 +1,13 @@
-// src/config/gameConfig.js
 export const GAME_CONFIG = {
     ORIGINAL_WIDTH: 928,
     ORIGINAL_HEIGHT: 793,
     HEIGHT_TO_SHOW: 600,
     VERTICAL_OFFSET: 300,
     PLAYER: {
-        SCALE: 2,
+        SCALE: 4,
         INITIAL_POSITION: {
             X_RATIO: 0.2,
-            Y_RATIO: 0.9
+            Y_RATIO: 0.82
         },
         PHYSICS: {
             JUMP_VELOCITY: -8,
@@ -19,6 +18,6 @@ export const GAME_CONFIG = {
         }
     },
     SCROLL_SPEED: {
-        BASE: 1.67  // Changed from 5 to 1.67 (3 times slower)
+        BASE: 3  // Reduced from 10 to 5 to slow down by 200%
     }
 };
