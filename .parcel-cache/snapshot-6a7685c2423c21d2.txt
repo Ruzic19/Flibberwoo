@@ -58,7 +58,7 @@
 125C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\posthtml\node_modules\domutils\lib\traversal.d.ts.map133809364169797167 0
 121C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\@parcel\source-map\parcel_sourcemap_node\index.js133809364155879962 0
 96C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\weak-lru-cache\README.md133809364154387121 0
-63C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist133811164111849375 1
+63C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist133811166036152124 1
 112C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\@parcel\diagnostic\test\markdown.test.js133809364169474100 0
 118C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\posthtml\node_modules\entities\lib\encode.d.ts133809364170206604 0
 88C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\has-flag\license133809364153784614 0
@@ -217,7 +217,7 @@
 93C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\chalk\source\index.js133809364167864429 0
 121C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\phaser\src\tilemaps\TilemapLayerCanvasRenderer.js133809364176123242 0
 117C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\phaser\src\physics\arcade\components\index.js133809364167456130 0
-81C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\src\entities\Player.js133811164117134907 0
+81C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\src\entities\Player.js133811165971052062 0
 123C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\caniuse-lite\data\features\background-attachment.js133809364156814230 0
 97C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\public\assets\player_sprites\run-6.png131404796940000000 0
 107C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\caniuse-lite\dist\unpacker\index.js133809364160774014 0
@@ -1037,7 +1037,7 @@
 95C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\js-yaml\dist\js-yaml.js133809364155585294 0
 92C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\dotenv\lib\main.d.ts133809364155889962 0
 94C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\timsort\src\timsort.js133809364154613689 0
-81C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\index.4d6bcbeb.js133811164111689371 0
+81C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\index.4d6bcbeb.js133811166036052108 0
 97C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\@parcel\optimizer-css\lib133809364172546526 1
 105C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\type-fest\source\stringified.d.ts133809364156466818 0
 126C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\phaser\src\tilemaps\parsers\impact\ParseWeltmeister.js133809364170678663 0
@@ -6979,7 +6979,7 @@
 83C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\.bin\semver133809364183733458 0
 103C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\node_modules\.bin\update-browserslist-db.ps1133809364183733458 0
 70C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\assets133810852786755759 1
-85C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\index.4d6bcbeb.js.map133811164111839367 0
+85C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\index.4d6bcbeb.js.map133811166036152124 0
 81C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\assets\background133810287051621212 1
 85C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\assets\player_sprites133810852786815974 1
 95C:\Users\imalt\OneDrive\Desktop\GitHub_Projects\Flibberwoo\dist\assets\player_sprites\run-4.png131404796930000000 0

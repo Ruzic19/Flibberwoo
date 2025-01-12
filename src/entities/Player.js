@@ -25,8 +25,12 @@ export default class Player {
         this.jumpHeight = 0;
         this.isHoldingJump = false;
         this.crouchTimer = null;
-        this.canCrouch = true;        // New: Flag to track if we can start a new crouch
-        this.crouchKeyPressed = false; // New: Track if the crouch key is currently held down
+        this.canCrouch = true;
+        this.crouchKeyPressed = false;
+        
+        // New jump control flags
+        this.canJump = true;
+        this.jumpKeyPressed = false;
 
         console.log('Player initialized:', {
             initialY: this.initialY,
@@ -81,13 +85,14 @@ export default class Player {
         if (!keyboard) return;
 
         keyboard.on('keydown-W', () => {
-            if (!this.isJumping && !this.isCrouching) {
+            if (!this.jumpKeyPressed && this.canJump && !this.isJumping && !this.isCrouching) {
+                this.jumpKeyPressed = true;
                 this.startJump();
             }
         });
 
         keyboard.on('keyup-W', () => {
-            console.log('W key released');
+            this.jumpKeyPressed = false;
             this.releaseJump();
         });
 
@@ -99,7 +104,7 @@ export default class Player {
         });
 
         keyboard.on('keyup-S', () => {
-            this.crouchKeyPressed = false;  // Reset the key state when released
+            this.crouchKeyPressed = false;
         });
     }
 
@@ -115,9 +120,9 @@ export default class Player {
     }
 
     startJump() {
-        if (this.jumpCooldown || this.isJumping) {
+        if (!this.canJump || this.isJumping) {
             console.log('Jump prevented:', {
-                hasCooldown: this.jumpCooldown,
+                canJump: this.canJump,
                 isJumping: this.isJumping
             });
             return;
@@ -128,17 +133,12 @@ export default class Player {
             initialY: Math.round(this.initialY)
         });
         
+        this.canJump = false;  // Prevent new jump until current one is complete
         this.isJumping = true;
         this.isHoldingJump = true;
         this.currentVelocity = GAME_CONFIG.PLAYER.PHYSICS.JUMP_VELOCITY;
         this.jumpHeight = 0;
         this.sprite.play(ANIMATIONS.JUMP);
-        
-        // Add a small cooldown to prevent rapid jump spamming
-        this.jumpCooldown = true;
-        this.scene.time.delayedCall(150, () => {
-            this.jumpCooldown = false;
-        });
     }
 
     releaseJump() {
@@ -157,12 +157,11 @@ export default class Player {
     startCrouch() {
         if (!this.canCrouch || this.isCrouching || this.crouchTimer) return;
         
-        this.canCrouch = false;  // Prevent new crouch until current one is complete
+        this.canCrouch = false;
         this.isCrouching = true;
         this.sprite.play(ANIMATIONS.CROUCH);
 
-        // Set timer for automatic crouch end
-        this.crouchTimer = this.scene.time.delayedCall(700, () => { // 700ms = 0.7 seconds
+        this.crouchTimer = this.scene.time.delayedCall(700, () => {
             this.endCrouch();
         });
     }
@@ -180,13 +179,9 @@ export default class Player {
             this.sprite.play(ANIMATIONS.RUN);
         }
 
-        // Only allow new crouch when:
-        // 1. The current crouch is complete
-        // 2. The crouch key (S) is not being held down
         if (!this.crouchKeyPressed) {
             this.canCrouch = true;
         } else {
-            // If key is still held, wait for release
             const checkKeyUp = this.scene.time.addEvent({
                 delay: 10,
                 callback: () => {
@@ -203,7 +198,6 @@ export default class Player {
     updateJump() {
         if (!this.isJumping) return;
 
-        // Calculate current height before applying velocity
         this.jumpHeight = this.initialY - this.sprite.y;
 
         console.log('Jump State:', {
@@ -215,22 +209,17 @@ export default class Player {
             isJumping: this.isJumping
         });
 
-        // Determine if we should start falling
         if (this.jumpHeight >= GAME_CONFIG.PLAYER.PHYSICS.MAX_JUMP_HEIGHT) {
             console.log('Max height reached, forcing fall');
-            // Force falling when max height is reached, regardless of key state
             this.currentVelocity = GAME_CONFIG.PLAYER.PHYSICS.FALL_VELOCITY;
-            this.isHoldingJump = false;  // Force release the jump when max height reached
+            this.isHoldingJump = false;
         } else if (!this.isHoldingJump) {
             console.log('Jump released, starting fall');
-            // Start falling if jump key was released
             this.currentVelocity = GAME_CONFIG.PLAYER.PHYSICS.FALL_VELOCITY;
         }
         
-        // Add gravity effect
         this.currentVelocity += GAME_CONFIG.PLAYER.PHYSICS.GRAVITY;
         
-        // Update position
         let previousY = this.sprite.y;
         this.sprite.y += this.currentVelocity;
         
@@ -240,14 +229,12 @@ export default class Player {
             deltaY: Math.round((this.sprite.y - previousY) * 100) / 100
         });
         
-        // Cap at max height
         if (this.jumpHeight > GAME_CONFIG.PLAYER.PHYSICS.MAX_JUMP_HEIGHT) {
             console.log('Capping at max height');
             this.sprite.y = this.initialY - GAME_CONFIG.PLAYER.PHYSICS.MAX_JUMP_HEIGHT;
             this.currentVelocity = Math.abs(GAME_CONFIG.PLAYER.PHYSICS.JUMP_VELOCITY);
         }
 
-        // Check for landing
         if (this.currentVelocity > 0 && this.sprite.y >= this.initialY) {
             console.log('Landing triggered:', {
                 finalY: Math.round(this.sprite.y),
@@ -269,11 +256,29 @@ export default class Player {
         this.currentVelocity = 0;
         this.jumpHeight = 0;
         
+        // Only allow new jump when the jump key is not being held
+        if (!this.jumpKeyPressed) {
+            this.canJump = true;
+        } else {
+            // If jump key is still held, wait for release
+            const checkKeyUp = this.scene.time.addEvent({
+                delay: 10,
+                callback: () => {
+                    if (!this.jumpKeyPressed) {
+                        this.canJump = true;
+                        checkKeyUp.remove();
+                    }
+                },
+                loop: true
+            });
+        }
+        
         console.log('Landing complete - Final state:', {
             y: Math.round(this.sprite.y),
             initialY: Math.round(this.initialY),
             isJumping: this.isJumping,
-            isHolding: this.isHoldingJump
+            isHolding: this.isHoldingJump,
+            canJump: this.canJump
         });
 
         if (!this.isCrouching) {
