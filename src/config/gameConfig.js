@@ -18,6 +18,6 @@ export const GAME_CONFIG = {
         }
     },
     SCROLL_SPEED: {
-        BASE: 2
+        BASE: 10                        // Doubled from 2 to 10 for faster game speed
     }
 };
