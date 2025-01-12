@@ -4,10 +4,10 @@ export const GAME_CONFIG = {
     HEIGHT_TO_SHOW: 600,
     VERTICAL_OFFSET: 300,
     PLAYER: {
-        SCALE: 4,
+        SCALE: 3,
         INITIAL_POSITION: {
             X_RATIO: 0.2,
-            Y_RATIO: 0.82
+            Y_RATIO: 0.86
         },
         PHYSICS: {
             JUMP_VELOCITY: -8,
@@ -18,6 +18,6 @@ export const GAME_CONFIG = {
         }
     },
     SCROLL_SPEED: {
-        BASE: 3  // Reduced from 10 to 5 to slow down by 200%
+        BASE: 3
     }
 };

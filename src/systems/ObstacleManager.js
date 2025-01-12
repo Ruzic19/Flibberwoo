@@ -14,20 +14,53 @@ export class ObstacleManager {
             [OBSTACLE_CONFIG.TYPES.LARGE]: []
         };
         
-        // Initialize timing and speed
         this.nextSpawnTime = this.scene.time.now + OBSTACLE_CONFIG.SPAWN.INITIAL_DELAY;
         this.currentSpeed = OBSTACLE_CONFIG.SPAWN.BASE_SPEED;
-        this.currentMinDistance = OBSTACLE_CONFIG.SPAWN.MIN_DISTANCE;
-        this.currentMaxDistance = OBSTACLE_CONFIG.SPAWN.MAX_DISTANCE;
+        this.groupMode = false;
+        this.remainingGroupSize = 0;
         
         this.debugLog('Initializing obstacle manager');
         this.initializePool();
     }
 
     calculateSpawnDelay() {
-        const distance = this.getRandomDistance();
-        // Convert pixels to time based on current speed
+        let distance;
+        
+        // Check if we're in group mode or should start a new group
+        if (!this.groupMode && Math.random() < OBSTACLE_CONFIG.SPAWN.GROUP_CHANCE) {
+            this.groupMode = true;
+            this.remainingGroupSize = Math.floor(
+                Math.random() * 
+                (OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN + 1) + 
+                OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN
+            );
+            this.debugLog('Starting new group', { size: this.remainingGroupSize });
+        }
+
+        if (this.groupMode) {
+            // In a group, use tight spacing
+            distance = Math.random() * 
+                (OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN) + 
+                OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN;
+            
+            this.remainingGroupSize--;
+            if (this.remainingGroupSize <= 0) {
+                this.groupMode = false;
+                // Add extra gap after group
+                distance += Math.random() * 
+                    (OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN) + 
+                    OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN;
+            }
+        } else {
+            // Not in a group, use normal gap spacing
+            distance = Math.random() * 
+                (OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN) + 
+                OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN;
+        }
+
+        // Calculate delay based on distance and current speed
         const delay = (distance / this.currentSpeed) * 1000;
+        
         return { distance, delay };
     }
 
@@ -107,27 +140,25 @@ export class ObstacleManager {
     }
 
     updateDifficulty(speedIncrement, distanceDecrement) {
-        // Update speed with bounds checking
         this.currentSpeed = Math.min(
             this.currentSpeed + speedIncrement,
             OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED
         );
         
-        // Update distances with bounds checking
-        this.currentMinDistance = Math.max(
-            this.currentMinDistance - distanceDecrement,
-            OBSTACLE_CONFIG.DIFFICULTY.MIN_SPAWN_DISTANCE
+        // Also adjust group spacing as difficulty increases
+        OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN = Math.max(
+            OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN - distanceDecrement,
+            100  // Hard minimum to prevent overlap
         );
-        
-        this.currentMaxDistance = Math.max(
-            this.currentMaxDistance - distanceDecrement,
-            OBSTACLE_CONFIG.DIFFICULTY.MAX_SPAWN_DISTANCE
+        OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX = Math.max(
+            OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX - distanceDecrement,
+            200
         );
 
         this.debugLog('Difficulty updated', {
             newSpeed: this.currentSpeed,
-            newMinDistance: this.currentMinDistance,
-            newMaxDistance: this.currentMaxDistance
+            newGroupSpacingMin: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN,
+            newGroupSpacingMax: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX
         });
     }
 

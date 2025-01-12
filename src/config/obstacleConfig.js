@@ -6,10 +6,23 @@ export const OBSTACLE_CONFIG = {
         LARGE: 'rock-head'
     },
     SPAWN: {
-        MIN_DISTANCE: 833,  // Reduced to 1/3 of previous value (2500/3)
-        MAX_DISTANCE: 3000, // Also reduced for better game flow
+        MIN_DISTANCE: 150,    // Increased from 100
+        MAX_DISTANCE: 750,    // Kept the same
         INITIAL_DELAY: 2000,
-        BASE_SPEED: 600,    // Matched with layer1's movement speed
+        BASE_SPEED: 600,     
+        GROUP_CHANCE: 0.4,    
+        GROUP_SIZE: {
+            MIN: 2,          
+            MAX: 4           
+        },
+        GROUP_SPACING: {
+            MIN: 150,        // Increased from 100
+            MAX: 300         // Increased proportionally
+        },
+        GAP_SPACING: {
+            MIN: 600,        // Increased from 400
+            MAX: 750         // Kept the same
+        },
         Y_POSITION: {
             SMALL: 0.93,
             MEDIUM: 0.93,
@@ -18,11 +31,11 @@ export const OBSTACLE_CONFIG = {
     },
     DIFFICULTY: {
         SPEED_INCREMENT: 20,
-        DISTANCE_DECREMENT: 100,
+        DISTANCE_DECREMENT: 50,
         INTERVAL: 15000,
-        MIN_SPAWN_DISTANCE: 100,  // Matches new MIN_DISTANCE
-        MAX_SPAWN_DISTANCE: 750, // Matches new MAX_DISTANCE
-        MAX_SPEED: 1200          // Increased to maintain difficulty progression
+        MIN_SPAWN_DISTANCE: 150,  // Increased from 100
+        MAX_SPAWN_DISTANCE: 750,
+        MAX_SPEED: 1200
     },
     SCALE: {
         SMALL: 2,
