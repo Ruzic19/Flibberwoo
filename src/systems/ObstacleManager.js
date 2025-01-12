@@ -15,6 +15,7 @@ export class ObstacleManager {
         this.nextSpawnTime = 0;
         this.currentSpeed = OBSTACLE_CONFIG.SPAWN.BASE_SPEED;
         this.currentMinDistance = OBSTACLE_CONFIG.SPAWN.MIN_DISTANCE;
+        this.currentMaxDistance = OBSTACLE_CONFIG.SPAWN.MAX_DISTANCE; // Now using config value
         
         this.debugLog('Initializing obstacle manager');
         this.initializePool();
@@ -40,6 +41,11 @@ export class ObstacleManager {
         const obstacle = this.obstacles[type].find(obs => !obs.isActive());
         this.debugLog(`Finding inactive obstacle of type ${type}`, obstacle ? 'Found' : 'Not found');
         return obstacle;
+    }
+
+    getRandomDistance() {
+        // Generate a random distance between currentMinDistance and currentMaxDistance
+        return Math.random() * (this.currentMaxDistance - this.currentMinDistance) + this.currentMinDistance;
     }
 
     spawnObstacle() {
@@ -73,8 +79,15 @@ export class ObstacleManager {
         // Enable the obstacle
         obstacle.enable(x, y, this.currentSpeed);
         
-        // Set next spawn time
-        this.nextSpawnTime = currentTime + this.currentMinDistance;
+        // Set next spawn time with random distance
+        const randomDistance = this.getRandomDistance();
+        this.nextSpawnTime = currentTime + randomDistance;
+        
+        this.debugLog('Next spawn scheduled at', { 
+            distance: randomDistance,
+            minDistance: this.currentMinDistance,
+            maxDistance: this.currentMaxDistance
+        });
     }
 
     getTypeName(type) {
@@ -89,14 +102,21 @@ export class ObstacleManager {
             OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED
         );
         
+        // Update both min and max distances
         this.currentMinDistance = Math.max(
             this.currentMinDistance - distanceDecrement,
             OBSTACLE_CONFIG.DIFFICULTY.MIN_SPAWN_DISTANCE
         );
+        
+        this.currentMaxDistance = Math.max(
+            this.currentMaxDistance - distanceDecrement,
+            OBSTACLE_CONFIG.DIFFICULTY.MAX_SPAWN_DISTANCE // Now using config value
+        );
 
         this.debugLog('Difficulty updated', {
             newSpeed: this.currentSpeed,
-            newDistance: this.currentMinDistance
+            newMinDistance: this.currentMinDistance,
+            newMaxDistance: this.currentMaxDistance
         });
     }
 

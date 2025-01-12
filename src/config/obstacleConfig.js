@@ -6,7 +6,8 @@ export const OBSTACLE_CONFIG = {
         LARGE: 'rock-head'
     },
     SPAWN: {
-        MIN_DISTANCE: 6000,
+        MIN_DISTANCE: 3000,
+        MAX_DISTANCE: 18000,  // Added: 3x the MIN_DISTANCE
         INITIAL_DELAY: 4000,
         BASE_SPEED: 60,     // Reduced to match floor layer speed
         Y_POSITION: {
@@ -20,6 +21,7 @@ export const OBSTACLE_CONFIG = {
         DISTANCE_DECREMENT: 250,
         INTERVAL: 15000,
         MIN_SPAWN_DISTANCE: 4000,
+        MAX_SPAWN_DISTANCE: 12000,  // Added: 3x the MIN_SPAWN_DISTANCE
         MAX_SPEED: 120      // Reduced max speed to stay in sync
     },
     SCALE: {
