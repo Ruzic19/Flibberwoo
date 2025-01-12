@@ -24,6 +24,9 @@ export default class Player {
         this.currentVelocity = 0;
         this.jumpHeight = 0;
         this.isHoldingJump = false;
+        this.crouchTimer = null;
+        this.canCrouch = true;        // New: Flag to track if we can start a new crouch
+        this.crouchKeyPressed = false; // New: Track if the crouch key is currently held down
 
         console.log('Player initialized:', {
             initialY: this.initialY,
@@ -89,15 +92,14 @@ export default class Player {
         });
 
         keyboard.on('keydown-S', () => {
-            if (!this.isJumping && !this.isCrouching) {
+            if (!this.crouchKeyPressed && this.canCrouch && !this.isJumping && !this.isCrouching) {
+                this.crouchKeyPressed = true;
                 this.startCrouch();
             }
         });
 
         keyboard.on('keyup-S', () => {
-            if (this.isCrouching) {
-                this.endCrouch();
-            }
+            this.crouchKeyPressed = false;  // Reset the key state when released
         });
     }
 
@@ -153,13 +155,49 @@ export default class Player {
     }
 
     startCrouch() {
+        if (!this.canCrouch || this.isCrouching || this.crouchTimer) return;
+        
+        this.canCrouch = false;  // Prevent new crouch until current one is complete
         this.isCrouching = true;
         this.sprite.play(ANIMATIONS.CROUCH);
+
+        // Set timer for automatic crouch end
+        this.crouchTimer = this.scene.time.delayedCall(700, () => { // 700ms = 0.7 seconds
+            this.endCrouch();
+        });
     }
 
     endCrouch() {
+        if (!this.isCrouching) return;
+        
         this.isCrouching = false;
-        this.sprite.play(ANIMATIONS.RUN);
+        if (this.crouchTimer) {
+            this.crouchTimer.remove();
+            this.crouchTimer = null;
+        }
+        
+        if (!this.isJumping) {
+            this.sprite.play(ANIMATIONS.RUN);
+        }
+
+        // Only allow new crouch when:
+        // 1. The current crouch is complete
+        // 2. The crouch key (S) is not being held down
+        if (!this.crouchKeyPressed) {
+            this.canCrouch = true;
+        } else {
+            // If key is still held, wait for release
+            const checkKeyUp = this.scene.time.addEvent({
+                delay: 10,
+                callback: () => {
+                    if (!this.crouchKeyPressed) {
+                        this.canCrouch = true;
+                        checkKeyUp.remove();
+                    }
+                },
+                loop: true
+            });
+        }
     }
 
     updateJump() {

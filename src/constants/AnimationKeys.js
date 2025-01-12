@@ -9,7 +9,7 @@ export const ANIMATIONS = {
     },
     FRAME_RATE: {
         RUN: 10,
-        JUMP: 3,    // Slowed down jump animation
-        CROUCH: 5
+        JUMP: 3,
+        CROUCH: 3  // Adjusted to make the animation smoother over 0.7 seconds
     }
 };
