@@ -14,13 +14,32 @@ export class ObstacleManager {
             [OBSTACLE_CONFIG.TYPES.LARGE]: []
         };
         
-        this.nextSpawnTime = 0;
-        this.currentSpeed = OBSTACLE_CONFIG.SPAWN.BASE_SPEED;  // Use OBSTACLE_CONFIG initially
+        // Initialize timing and speed
+        this.nextSpawnTime = this.scene.time.now + OBSTACLE_CONFIG.SPAWN.INITIAL_DELAY;
+        this.currentSpeed = OBSTACLE_CONFIG.SPAWN.BASE_SPEED;
         this.currentMinDistance = OBSTACLE_CONFIG.SPAWN.MIN_DISTANCE;
         this.currentMaxDistance = OBSTACLE_CONFIG.SPAWN.MAX_DISTANCE;
         
         this.debugLog('Initializing obstacle manager');
         this.initializePool();
+    }
+
+    calculateSpawnDelay() {
+        const distance = this.getRandomDistance();
+        // Convert pixels to time based on current speed
+        const delay = (distance / this.currentSpeed) * 1000;
+        return { distance, delay };
+    }
+
+    calculateBaseSpeed() {
+        // Calculate speed based on game config and parallax effect
+        const baseGameSpeed = GAME_CONFIG.SCROLL_SPEED.BASE;
+        const parallaxFactor = 0.5; // Maximum parallax factor for foreground
+        return baseGameSpeed * parallaxFactor * window.devicePixelRatio * 20; // Scale factor to match visual speed
+    }
+
+    getCurrentSpeed() {
+        return this.calculateBaseSpeed() * this.speedMultiplier;
     }
 
     debugLog(message, data = null) {
@@ -43,16 +62,7 @@ export class ObstacleManager {
     }
 
     getRandomDistance() {
-        // Calculate spawn distance
-        const distance = Math.floor(Math.random() * 
-            (this.currentMaxDistance - this.currentMinDistance)) + 
-            this.currentMinDistance;
-        
-        // Convert to time based on current speed
-        const time = (distance / this.currentSpeed) * 1000;
-        
-        this.debugLog('Spawn calculation', { distance, time, speed: this.currentSpeed });
-        return time;
+        return Math.random() * (this.currentMaxDistance - this.currentMinDistance) + this.currentMinDistance;
     }
 
     spawnObstacle() {
@@ -74,16 +84,19 @@ export class ObstacleManager {
         const y = this.scene.cameras.main.height * 
             OBSTACLE_CONFIG.SPAWN.Y_POSITION[this.getTypeName(randomType)];
         
-        this.debugLog('Spawning obstacle', { type: randomType, x, y, speed: this.currentSpeed });
+        this.debugLog(`Spawning obstacle at position`, { x, y, speed: this.currentSpeed });
         
         obstacle.enable(x, y, this.currentSpeed);
         
-        const spawnDelay = this.getRandomDistance();
-        this.nextSpawnTime = currentTime + spawnDelay;
-        
-        this.debugLog('Next spawn scheduled', {
-            delay: spawnDelay,
-            nextTime: this.nextSpawnTime
+        // Calculate next spawn time
+        const { distance, delay } = this.calculateSpawnDelay();
+        this.nextSpawnTime = currentTime + delay;
+
+        this.debugLog('Spawn calculation', {
+            distance,
+            delay,
+            speed: this.currentSpeed,
+            nextSpawn: new Date(this.nextSpawnTime).toISOString()
         });
     }
 
@@ -94,11 +107,13 @@ export class ObstacleManager {
     }
 
     updateDifficulty(speedIncrement, distanceDecrement) {
+        // Update speed with bounds checking
         this.currentSpeed = Math.min(
             this.currentSpeed + speedIncrement,
             OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED
         );
         
+        // Update distances with bounds checking
         this.currentMinDistance = Math.max(
             this.currentMinDistance - distanceDecrement,
             OBSTACLE_CONFIG.DIFFICULTY.MIN_SPAWN_DISTANCE
@@ -110,9 +125,9 @@ export class ObstacleManager {
         );
 
         this.debugLog('Difficulty updated', {
-            speed: this.currentSpeed,
-            minDist: this.currentMinDistance,
-            maxDist: this.currentMaxDistance
+            newSpeed: this.currentSpeed,
+            newMinDistance: this.currentMinDistance,
+            newMaxDistance: this.currentMaxDistance
         });
     }
 
