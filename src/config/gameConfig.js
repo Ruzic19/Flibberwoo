@@ -10,10 +10,10 @@ export const GAME_CONFIG = {
             Y_RATIO: 0.9
         },
         PHYSICS: {
-            JUMP_VELOCITY: -8,
-            GRAVITY: 0.3,
-            MAX_JUMP_HEIGHT: 150,
-            HOLD_JUMP_FORCE: -0.5
+            JUMP_VELOCITY: -6,         // Reduced initial velocity for less sensitivity
+            GRAVITY: 0.2,             // Reduced gravity for slower fall
+            MAX_JUMP_HEIGHT: 200,     // Increased maximum height
+            HOLD_JUMP_FORCE: -0.3     // Reduced hold force for more controlled ascent
         }
     },
     SCROLL_SPEED: {

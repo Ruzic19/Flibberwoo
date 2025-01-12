@@ -4,15 +4,22 @@ import GameMenu from "./scenes/GameMenu";
 import GameScene from "./scenes/GameScene";
 
 const config = {
-    type: Phaser.AUTO,
-    width: 928,  // Match the background image width
-    height: 450, // Reduced height to remove the black space
+    type: Phaser.CANVAS,  // Using CANVAS renderer for better pixel art rendering
+    width: 928,
+    height: 450,
     parent: 'game',
     backgroundColor: '#000000',
-    scene: [GameMenu, GameScene],  // Make sure GameMenu is first
+    scene: [GameMenu, GameScene],
+    render: {
+        pixelArt: true,  // Enable pixel art mode globally
+        antialias: false,  // Disable antialiasing
+        roundPixels: true  // Round pixel positions to prevent subpixel rendering
+    },
     scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 928,
+        height: 450
     },
     physics: {
         default: 'arcade',
@@ -25,7 +32,6 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// Add some global error handling
 window.onerror = function(msg, src, lineNo, colNo, error) {
     console.error('Game Error:', { msg, src, lineNo, colNo, error });
     return false;

@@ -17,23 +17,11 @@ export default class GameScene extends Phaser.Scene {
         this.debug('Scene initialized');
     }
 
-    checkAssetPaths() {
-        this.debug('Checking asset paths:');
-        LAYER_INFO.forEach(layer => {
-            const path = `assets/background/${layer.file}`;
-            // Log the complete URL that will be used
-            const fullPath = this.load.baseURL + path;
-            this.debug(`Full asset path for ${layer.key}: ${fullPath}`);
-        });
-    }
-
     preload() {
         this.debug('Starting preload');
         this.load.baseURL = '/';
         this.load.crossOrigin = 'anonymous';
         
-        this.checkAssetPaths();
-
         // Load background layers
         this.debug('Loading background layers', LAYER_INFO);
         LAYER_INFO.forEach(layer => {
@@ -49,15 +37,9 @@ export default class GameScene extends Phaser.Scene {
     create() {
         this.debug('Create function started');
         
-        // Verify loaded textures
-        this.debug('Available textures:', Object.keys(this.textures.list));
-        
         // Create background
         this.debug('Creating ParallaxBackground');
         this.background = new ParallaxBackground(this, LAYER_INFO);
-        
-        // Create player animations
-        AssetLoader.createPlayerAnimations(this);
 
         // Create player
         const playerX = this.cameras.main.width * GAME_CONFIG.PLAYER.INITIAL_POSITION.X_RATIO;
@@ -66,7 +48,11 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update() {
-        this.background.update();
-        this.player.update();
+        if (this.background) {
+            this.background.update();
+        }
+        if (this.player) {
+            this.player.update();
+        }
     }
 }

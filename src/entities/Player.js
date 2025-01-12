@@ -4,44 +4,91 @@ import { ANIMATIONS } from '../constants/AnimationKeys';
 export default class Player {
     constructor(scene, x, y) {
         this.scene = scene;
+
+        // Create the sprite with pixel art optimizations
         this.sprite = scene.add.sprite(x, y, 'run-1')
             .setDepth(12)
             .setScale(GAME_CONFIG.PLAYER.SCALE)
             .setOrigin(0.5, 0.5);
         
-        this.initialY = y;
+        // Apply pixel art optimizations
+        this.sprite.texture.setFilter(Phaser.Textures.LINEAR);
+        
+        // Ensure the sprite position snaps to pixels
+        this.sprite.x = Math.round(this.sprite.x);
+        this.sprite.y = Math.round(this.sprite.y);
+        
+        this.initialY = Math.round(y);
         this.isJumping = false;
         this.isCrouching = false;
         this.currentVelocity = 0;
         this.jumpHeight = 0;
         this.isHoldingJump = false;
 
-        // Set pixel-art friendly scaling
-        this.sprite.texture.setFilter(Phaser.Textures.NEAREST);
+        // Create animations if they don't exist
+        this.createAnimations();
         
         this.setupControls();
         this.setupAnimationListeners();
+
+        // Start running animation
         this.sprite.play(ANIMATIONS.RUN);
     }
 
+    createAnimations() {
+        // Check if animations already exist
+        if (!this.scene.anims.exists(ANIMATIONS.RUN)) {
+            this.scene.anims.create({
+                key: ANIMATIONS.RUN,
+                frames: Array.from({ length: ANIMATIONS.FRAMES.RUN }, 
+                    (_, i) => ({ key: `run-${i + 1}` })),
+                frameRate: ANIMATIONS.FRAME_RATE.RUN,
+                repeat: -1
+            });
+        }
+
+        if (!this.scene.anims.exists(ANIMATIONS.JUMP)) {
+            this.scene.anims.create({
+                key: ANIMATIONS.JUMP,
+                frames: Array.from({ length: ANIMATIONS.FRAMES.JUMP }, 
+                    (_, i) => ({ key: `jump-${i + 1}` })),
+                frameRate: ANIMATIONS.FRAME_RATE.JUMP,
+                repeat: 0
+            });
+        }
+
+        if (!this.scene.anims.exists(ANIMATIONS.CROUCH)) {
+            this.scene.anims.create({
+                key: ANIMATIONS.CROUCH,
+                frames: Array.from({ length: ANIMATIONS.FRAMES.CROUCH }, 
+                    (_, i) => ({ key: `crouch-${i + 1}` })),
+                frameRate: ANIMATIONS.FRAME_RATE.CROUCH,
+                repeat: 0
+            });
+        }
+    }
+
     setupControls() {
-        this.scene.input.keyboard.on('keydown-W', () => {
+        const keyboard = this.scene.input.keyboard;
+        if (!keyboard) return;
+
+        keyboard.on('keydown-W', () => {
             if (!this.isJumping && !this.isCrouching) {
                 this.startJump();
             }
         });
 
-        this.scene.input.keyboard.on('keyup-W', () => {
+        keyboard.on('keyup-W', () => {
             this.releaseJump();
         });
 
-        this.scene.input.keyboard.on('keydown-S', () => {
+        keyboard.on('keydown-S', () => {
             if (!this.isJumping && !this.isCrouching) {
                 this.startCrouch();
             }
         });
 
-        this.scene.input.keyboard.on('keyup-S', () => {
+        keyboard.on('keyup-S', () => {
             if (this.isCrouching) {
                 this.endCrouch();
             }
@@ -60,10 +107,18 @@ export default class Player {
     }
 
     startJump() {
+        if (this.jumpCooldown) return;
+        
         this.isJumping = true;
         this.isHoldingJump = true;
         this.currentVelocity = GAME_CONFIG.PLAYER.PHYSICS.JUMP_VELOCITY;
         this.sprite.play(ANIMATIONS.JUMP);
+        
+        // Add a small cooldown to prevent rapid jump spamming
+        this.jumpCooldown = true;
+        this.scene.time.delayedCall(150, () => {
+            this.jumpCooldown = false;
+        });
     }
 
     releaseJump() {
@@ -119,5 +174,9 @@ export default class Player {
         if (this.isJumping) {
             this.updateJump();
         }
+        
+        // Ensure position remains pixel-perfect
+        this.sprite.x = Math.round(this.sprite.x);
+        this.sprite.y = Math.round(this.sprite.y);
     }
 }
