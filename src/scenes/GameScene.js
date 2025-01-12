@@ -1,6 +1,6 @@
 import { GAME_CONFIG } from '../config/gameConfig';
 import { LAYER_INFO } from '../config/layerConfig';
-import Player from '../entities/Player';
+import Player from '../entities/player/Player';
 import ParallaxBackground from '../systems/ParallaxBackground';
 import AssetLoader from '../assets/AssetLoader';
 
