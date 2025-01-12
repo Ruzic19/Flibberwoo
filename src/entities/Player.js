@@ -25,9 +25,14 @@ export default class Player {
         this.jumpHeight = 0;
         this.isHoldingJump = false;
 
+        console.log('Player initialized:', {
+            initialY: this.initialY,
+            x: this.sprite.x,
+            y: this.sprite.y
+        });
+
         // Create animations if they don't exist
         this.createAnimations();
-        
         this.setupControls();
         this.setupAnimationListeners();
 
@@ -79,6 +84,7 @@ export default class Player {
         });
 
         keyboard.on('keyup-W', () => {
+            console.log('W key released');
             this.releaseJump();
         });
 
@@ -97,8 +103,8 @@ export default class Player {
 
     setupAnimationListeners() {
         this.sprite.on('animationcomplete', (animation) => {
+            console.log('Animation complete:', animation.key);
             if (animation.key === ANIMATIONS.JUMP) {
-                this.isJumping = false;
                 if (!this.isCrouching) {
                     this.sprite.play(ANIMATIONS.RUN);
                 }
@@ -107,11 +113,23 @@ export default class Player {
     }
 
     startJump() {
-        if (this.jumpCooldown) return;
+        if (this.jumpCooldown || this.isJumping) {
+            console.log('Jump prevented:', {
+                hasCooldown: this.jumpCooldown,
+                isJumping: this.isJumping
+            });
+            return;
+        }
+        
+        console.log('Starting jump from:', {
+            y: Math.round(this.sprite.y),
+            initialY: Math.round(this.initialY)
+        });
         
         this.isJumping = true;
         this.isHoldingJump = true;
         this.currentVelocity = GAME_CONFIG.PLAYER.PHYSICS.JUMP_VELOCITY;
+        this.jumpHeight = 0;
         this.sprite.play(ANIMATIONS.JUMP);
         
         // Add a small cooldown to prevent rapid jump spamming
@@ -122,6 +140,12 @@ export default class Player {
     }
 
     releaseJump() {
+        console.log('Release jump called:', {
+            isJumping: this.isJumping,
+            isHolding: this.isHoldingJump,
+            velocity: this.currentVelocity
+        });
+        
         this.isHoldingJump = false;
         if (this.isJumping && this.currentVelocity < 0) {
             this.currentVelocity = this.currentVelocity / 2;
@@ -139,35 +163,84 @@ export default class Player {
     }
 
     updateJump() {
-        if (this.isHoldingJump && this.currentVelocity < 0) {
-            let force = GAME_CONFIG.PLAYER.PHYSICS.HOLD_JUMP_FORCE;
-            if (Math.abs(this.currentVelocity) < 2) {
-                force *= 0.5;
-            }
-            this.currentVelocity += force;
+        if (!this.isJumping) return;
+
+        // Calculate current height before applying velocity
+        this.jumpHeight = this.initialY - this.sprite.y;
+
+        console.log('Jump State:', {
+            currentY: Math.round(this.sprite.y),
+            initialY: Math.round(this.initialY),
+            jumpHeight: Math.round(this.jumpHeight),
+            velocity: Math.round(this.currentVelocity * 100) / 100,
+            isHolding: this.isHoldingJump,
+            isJumping: this.isJumping
+        });
+
+        // Determine if we should start falling
+        if (this.jumpHeight >= GAME_CONFIG.PLAYER.PHYSICS.MAX_JUMP_HEIGHT) {
+            console.log('Max height reached, forcing fall');
+            // Force falling when max height is reached, regardless of key state
+            this.currentVelocity = GAME_CONFIG.PLAYER.PHYSICS.FALL_VELOCITY;
+            this.isHoldingJump = false;  // Force release the jump when max height reached
+        } else if (!this.isHoldingJump) {
+            console.log('Jump released, starting fall');
+            // Start falling if jump key was released
+            this.currentVelocity = GAME_CONFIG.PLAYER.PHYSICS.FALL_VELOCITY;
         }
         
-        this.sprite.y += this.currentVelocity;
+        // Add gravity effect
         this.currentVelocity += GAME_CONFIG.PLAYER.PHYSICS.GRAVITY;
         
-        this.jumpHeight = this.initialY - this.sprite.y;
+        // Update position
+        let previousY = this.sprite.y;
+        this.sprite.y += this.currentVelocity;
         
+        console.log('Position Update:', {
+            previousY: Math.round(previousY),
+            newY: Math.round(this.sprite.y),
+            deltaY: Math.round((this.sprite.y - previousY) * 100) / 100
+        });
+        
+        // Cap at max height
         if (this.jumpHeight > GAME_CONFIG.PLAYER.PHYSICS.MAX_JUMP_HEIGHT) {
+            console.log('Capping at max height');
             this.sprite.y = this.initialY - GAME_CONFIG.PLAYER.PHYSICS.MAX_JUMP_HEIGHT;
-            this.currentVelocity = 0;
+            this.currentVelocity = Math.abs(GAME_CONFIG.PLAYER.PHYSICS.JUMP_VELOCITY);
         }
 
-        if (this.sprite.y >= this.initialY) {
+        // Check for landing
+        if (this.currentVelocity > 0 && this.sprite.y >= this.initialY) {
+            console.log('Landing triggered:', {
+                finalY: Math.round(this.sprite.y),
+                targetY: Math.round(this.initialY)
+            });
             this.land();
         }
     }
 
     land() {
+        console.log('Landing executed - Resetting position:', {
+            fromY: Math.round(this.sprite.y),
+            toY: Math.round(this.initialY)
+        });
+        
         this.sprite.y = this.initialY;
         this.isJumping = false;
+        this.isHoldingJump = false;
         this.currentVelocity = 0;
         this.jumpHeight = 0;
-        this.sprite.play(ANIMATIONS.RUN);
+        
+        console.log('Landing complete - Final state:', {
+            y: Math.round(this.sprite.y),
+            initialY: Math.round(this.initialY),
+            isJumping: this.isJumping,
+            isHolding: this.isHoldingJump
+        });
+
+        if (!this.isCrouching) {
+            this.sprite.play(ANIMATIONS.RUN);
+        }
     }
 
     update() {
