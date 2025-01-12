@@ -1,3 +1,4 @@
+// src/config/obstacleConfig.js
 export const OBSTACLE_CONFIG = {
     POOL_SIZE: 5,
     TYPES: {
@@ -6,10 +7,11 @@ export const OBSTACLE_CONFIG = {
         LARGE: 'rock-head'
     },
     SPAWN: {
-        MIN_DISTANCE: 2500,
-        MAX_DISTANCE: 9000,
-        INITIAL_DELAY: 4000,
-        BASE_SPEED: 240,    // Changed from 60 to 240 (5x the original speed of 60)
+        MIN_DISTANCE: 400,
+        MAX_DISTANCE: 1200,
+        INITIAL_DELAY: 1600,
+        // 1.67 pixels per frame * 60 frames = 100 pixels per second
+        BASE_SPEED: 100,    // Changed from 300 to 100 (3 times slower)
         Y_POSITION: {
             SMALL: 0.93,
             MEDIUM: 0.93,
@@ -17,12 +19,12 @@ export const OBSTACLE_CONFIG = {
         }
     },
     DIFFICULTY: {
-        SPEED_INCREMENT: 10,  // Changed from 2 to 10 (5x the original increment)
-        DISTANCE_DECREMENT: 250,
+        SPEED_INCREMENT: 10,   // Changed from 30 to 10
+        DISTANCE_DECREMENT: 50,
         INTERVAL: 15000,
-        MIN_SPAWN_DISTANCE: 4000,
-        MAX_SPAWN_DISTANCE: 12000,
-        MAX_SPEED: 600      // Changed from 120 to 600 (5x the original max speed)
+        MIN_SPAWN_DISTANCE: 300,
+        MAX_SPAWN_DISTANCE: 1000,
+        MAX_SPEED: 200        // Changed from 600 to 200
     },
     SCALE: {
         SMALL: 2,

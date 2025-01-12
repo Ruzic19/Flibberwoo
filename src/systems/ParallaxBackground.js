@@ -32,13 +32,12 @@ export default class ParallaxBackground {
                             .setScale(scale)
                             .setDepth(index);
                         
-                        // Apply pixel art optimizations
                         sprite.texture.setFilter(Phaser.Textures.LINEAR);
                         
-                        const speed = (index / (layerInfo.length - 1)) * 0.5;
+                        const speed = (index / (layerInfo.length - 1));
                         sprite.scrollSpeed = speed;
                         sprite.startX = x;
-                        sprite.scrollX = 0; // Track fractional scroll amount
+                        sprite.scrollX = 0;
                         
                         this.layers.push(sprite);
                     }
@@ -58,11 +57,9 @@ export default class ParallaxBackground {
             const sprite1 = this.layers[i];
             const sprite2 = this.layers[i + 1];
             
-            // Update fractional scroll positions
             sprite1.scrollX += baseSpeed * sprite1.scrollSpeed;
             sprite2.scrollX += baseSpeed * sprite2.scrollSpeed;
             
-            // Apply rounded positions for pixel-perfect rendering
             sprite1.x = Math.round(sprite1.startX - sprite1.scrollX);
             sprite2.x = Math.round(sprite2.startX - sprite2.scrollX);
             
