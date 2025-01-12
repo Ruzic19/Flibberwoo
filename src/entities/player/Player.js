@@ -15,19 +15,20 @@ export default class Player {
         this.animations = new PlayerAnimations(scene);
         this.state = new PlayerState();
         this.physics = new PlayerPhysics(GAME_CONFIG.PLAYER.PHYSICS);
-        this.controls = new PlayerControls(scene, {
-            onJumpStart: () => this.startJump(),
-            onJumpEnd: () => this.releaseJump(),
-            onCrouchStart: () => this.startCrouch(),
-            onCrouchEnd: () => this.endCrouch()
-        });
+        
+        // Control state flags
+        this.isJumping = false;
+        this.isCrouching = false;
+        this.crouchTimer = null;
+        this.canJump = true;
+        this.jumpKeyPressed = false;
 
         this.setup();
     }
 
     setup() {
         this.animations.create();
-        this.controls.setup();
+        this.setupControls();
         this.animations.setupListeners(
             this.sprite,
             () => this.onJumpAnimationComplete(),
@@ -36,36 +37,88 @@ export default class Player {
         this.sprite.playAnimation(ANIMATIONS.RUN);
     }
 
+    setupControls() {
+        const keyboard = this.scene.input.keyboard;
+        if (!keyboard) return;
+
+        keyboard.on('keydown-W', () => {
+            // Check both isCrouching and crouchTimer to prevent jump during crouch animation
+            if (!this.jumpKeyPressed && this.canJump && !this.isJumping && 
+                !this.isCrouching && !this.crouchTimer) {
+                this.jumpKeyPressed = true;
+                this.startJump();
+            }
+        });
+
+        keyboard.on('keyup-W', () => {
+            this.jumpKeyPressed = false;
+            this.releaseJump();
+        });
+
+        keyboard.on('keydown-S', () => {
+            // Only start a new crouch if we're not already crouching and not jumping
+            if (!this.isCrouching && !this.isJumping && !this.crouchTimer) {
+                this.startCrouch();
+            }
+        });
+    }
+
     startJump() {
-        if (!this.state.canPerformJump() || this.state.isInJump() || this.state.isInCrouch()) {
-            return;
-        }
+        if (this.isJumping) return;
         
-        this.state.setJumping(true);
-        this.state.setCanJump(false);
+        this.isJumping = true;
+        this.canJump = false;
         this.physics.startJump();
         this.sprite.playAnimation(ANIMATIONS.JUMP);
     }
 
     releaseJump() {
-        if (this.state.isInJump()) {
+        if (this.isJumping) {
             this.physics.releaseJump();
+        }
+    }
+
+    startCrouch() {
+        // If already crouching or a crouch timer exists, ignore the request
+        if (this.isCrouching || this.crouchTimer) return;
+        
+        this.isCrouching = true;
+        this.sprite.playAnimation(ANIMATIONS.CROUCH);
+
+        // Set timer for automatic crouch end after 0.7 seconds
+        this.crouchTimer = this.scene.time.delayedCall(700, () => {
+            this.endCrouch();
+        });
+    }
+
+    endCrouch() {
+        if (!this.isCrouching) return;
+        
+        this.isCrouching = false;
+        if (this.crouchTimer) {
+            this.crouchTimer.remove();
+            this.crouchTimer = null;
+        }
+        
+        if (!this.isJumping) {
+            this.sprite.playAnimation(ANIMATIONS.RUN);
         }
     }
 
     land() {
         this.sprite.setY(this.initialY);
-        this.state.setJumping(false);
+        this.isJumping = false;
         this.physics.reset();
 
-        if (!this.controls.isJumpKeyPressed()) {
-            this.state.setCanJump(true);
+        // Only allow new jump when the jump key isn't being held
+        if (!this.jumpKeyPressed) {
+            this.canJump = true;
         } else {
             const checkKeyUp = this.scene.time.addEvent({
                 delay: 10,
                 callback: () => {
-                    if (!this.controls.isJumpKeyPressed()) {
-                        this.state.setCanJump(true);
+                    if (!this.jumpKeyPressed) {
+                        this.canJump = true;
                         checkKeyUp.remove();
                     }
                 },
@@ -73,59 +126,13 @@ export default class Player {
             });
         }
 
-        if (!this.state.isInCrouch()) {
+        if (!this.isCrouching) {
             this.sprite.playAnimation(ANIMATIONS.RUN);
-        }
-    }
-
-    startCrouch() {
-        if (!this.state.canPerformCrouch() || this.state.isInCrouch() || 
-            this.state.isInJump() || this.state.getCrouchTimer()) {
-            return;
-        }
-        
-        this.state.setCanCrouch(false);
-        this.state.setCrouching(true);
-        this.sprite.playAnimation(ANIMATIONS.CROUCH);
-
-        const crouchTimer = this.scene.time.delayedCall(700, () => {
-            this.endCrouch();
-        });
-        this.state.setCrouchTimer(crouchTimer);
-    }
-
-    endCrouch() {
-        if (!this.state.isInCrouch()) return;
-        
-        this.state.setCrouching(false);
-        const timer = this.state.getCrouchTimer();
-        if (timer) {
-            timer.remove();
-            this.state.setCrouchTimer(null);
-        }
-        
-        if (!this.state.isInJump()) {
-            this.sprite.playAnimation(ANIMATIONS.RUN);
-        }
-
-        if (!this.controls.isCrouchKeyPressed()) {
-            this.state.setCanCrouch(true);
-        } else {
-            const checkKeyUp = this.scene.time.addEvent({
-                delay: 10,
-                callback: () => {
-                    if (!this.controls.isCrouchKeyPressed()) {
-                        this.state.setCanCrouch(true);
-                        checkKeyUp.remove();
-                    }
-                },
-                loop: true
-            });
         }
     }
 
     onJumpAnimationComplete() {
-        if (!this.state.isInCrouch()) {
+        if (!this.isCrouching) {
             this.sprite.playAnimation(ANIMATIONS.RUN);
         }
     }
@@ -135,7 +142,7 @@ export default class Player {
     }
 
     update() {
-        if (this.state.isInJump()) {
+        if (this.isJumping) {
             const { newY, shouldLand } = this.physics.updateJump(
                 this.sprite.getY(), 
                 this.initialY
