@@ -11,8 +11,8 @@ export const OBSTACLE_CONFIG = {
         INITIAL_DELAY: 4000,
         BASE_SPEED: 60,     // Reduced to match floor layer speed
         Y_POSITION: {
-            SMALL: 0.9,
-            MEDIUM: 0.9,
+            SMALL: 0.93,
+            MEDIUM: 0.93,
             LARGE: 0.9
         }
     },
