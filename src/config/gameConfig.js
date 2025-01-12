@@ -10,10 +10,10 @@ export const GAME_CONFIG = {
             Y_RATIO: 0.86
         },
         PHYSICS: {
-            JUMP_VELOCITY: -8,
-            FALL_VELOCITY: 4.4,
+            JUMP_VELOCITY: -7,
+            FALL_VELOCITY: 4.25,
             GRAVITY: 0.1,
-            MAX_JUMP_HEIGHT: 750,
+            MAX_JUMP_HEIGHT: 230,
             HOLD_JUMP_FORCE: 0
         }
     },
