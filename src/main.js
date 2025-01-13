@@ -1,7 +1,7 @@
 // src/main.js
 import Phaser from "phaser";
 import GameMenu from "./scenes/GameMenu";
-import GameScene from "./scenes/GameScene";
+import GameScene from "./scenes/game/GameScene";
 
 const config = {
     type: Phaser.CANVAS,
