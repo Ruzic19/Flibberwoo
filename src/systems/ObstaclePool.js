@@ -4,7 +4,7 @@ export class ObstaclePool {
     constructor(scene) {
         this.scene = scene;
         this.pools = {};
-        this.debug = false;
+        this.debug = true;
     }
 
     initialize(types, poolSize) {
@@ -20,14 +20,29 @@ export class ObstaclePool {
     }
 
     getInactiveObstacle(type) {
-        return this.pools[type]?.find(obstacle => !obstacle.isActive());
+        const pool = this.pools[type];
+        if (!pool) return null;
+        
+        const obstacle = pool.find(obstacle => !obstacle.isActive());
+        
+        if (this.debug && obstacle) {
+            console.log(`[ObstaclePool] Retrieved inactive obstacle of type ${type}`);
+        }
+        
+        return obstacle;
     }
 
     getAllActive() {
-        return Object.values(this.pools)
+        const activeObstacles = Object.values(this.pools)
             .flat()
             .filter(obstacle => obstacle.isActive())
             .map(obstacle => obstacle.getSprite());
+            
+        if (this.debug) {
+            console.log(`[ObstaclePool] Total active obstacles: ${activeObstacles.length}`);
+        }
+        
+        return activeObstacles;
     }
 
     updateAll() {

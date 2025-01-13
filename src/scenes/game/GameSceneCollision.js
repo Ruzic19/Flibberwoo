@@ -1,7 +1,15 @@
+// src/scenes/game/GameSceneCollision.js
+import { GameOverHandler } from '../../systems/GameOverHandler';
+
 export class GameSceneCollision {
     constructor(scene) {
         this.scene = scene;
-        this.debug = false;
+        this.debug = true;
+        this.gameOverHandler = new GameOverHandler(scene);
+        this.checkingCollisions = false;
+        this.debugGraphics = null;
+        this.player = null;
+        this.obstacleManager = null;
     }
 
     debugLog(message, data = null) {
@@ -12,49 +20,124 @@ export class GameSceneCollision {
 
     setupCollision(player, obstacleManager) {
         this.debugLog('Setting up collision detection');
+        this.player = player;
+        this.obstacleManager = obstacleManager;
+        this.checkingCollisions = true;
 
-        const collider = this.scene.physics.add.collider(
-            player.sprite.sprite,
-            obstacleManager.getActiveObstacles(),
-            this.handleCollision.bind(this),
-            this.checkCollision.bind(this),
-            this
-        );
-
-        if (collider.showDebug) {
-            collider.showDebug = false;
+        // Enable debug rendering of physics bodies
+        if (this.debug) {
+            this.debugGraphics = this.scene.add.graphics();
+            this.debugGraphics.setDepth(1000);
+            
+            // Store update event callback so we can remove it later
+            this.updateDebugGraphics = () => {
+                if (!this.debugGraphics || !this.player || !this.obstacleManager) return;
+                
+                this.debugGraphics.clear();
+                this.debugGraphics.lineStyle(1, 0xff0000);
+                
+                // Draw player hitbox if it exists
+                const playerSprite = this.player.sprite.sprite;
+                if (playerSprite && playerSprite.body) {
+                    this.debugGraphics.strokeRect(
+                        playerSprite.body.x, 
+                        playerSprite.body.y, 
+                        playerSprite.body.width, 
+                        playerSprite.body.height
+                    );
+                }
+                
+                // Draw obstacle hitboxes
+                const obstacles = this.obstacleManager.getActiveObstacles();
+                if (obstacles) {
+                    obstacles.forEach(obstacle => {
+                        if (obstacle.body && obstacle.active) {
+                            this.debugGraphics.strokeRect(
+                                obstacle.body.x,
+                                obstacle.body.y,
+                                obstacle.body.width,
+                                obstacle.body.height
+                            );
+                        }
+                    });
+                }
+            };
+            
+            this.scene.events.on('update', this.updateDebugGraphics);
         }
     }
 
-    checkCollision(playerSprite, obstacleSprite) {
-        const playerBody = playerSprite.body;
-        const obstacleBody = obstacleSprite.body;
+    update() {
+        if (!this.checkingCollisions || !this.player || !this.obstacleManager) return;
 
-        const collision = Phaser.Geom.Rectangle.Overlaps(
-            playerBody.getBounds(),
-            obstacleBody.getBounds()
-        );
+        const playerSprite = this.player.sprite.sprite;
+        if (!playerSprite || !playerSprite.active) return;
 
-        if (collision) {
-            const overlap = Phaser.Geom.Rectangle.Overlap(
-                playerBody.getBounds(),
-                obstacleBody.getBounds()
-            );
-
-            const overlapThreshold = 0.2;
-            const overlapPercent = overlap / (playerBody.width * playerBody.height);
+        const playerBounds = playerSprite.getBounds();
+        const obstacles = this.obstacleManager.getActiveObstacles();
+        
+        if (!obstacles) return;
+        
+        obstacles.forEach(obstacle => {
+            if (!obstacle || !obstacle.active) return;
             
-            return overlapPercent > overlapThreshold;
-        }
-
-        return false;
+            const obstacleBounds = obstacle.getBounds();
+            
+            if (Phaser.Geom.Rectangle.Overlaps(playerBounds, obstacleBounds)) {
+                this.debugLog('Collision detected between:', {
+                    player: {
+                        x: playerSprite.x,
+                        y: playerSprite.y,
+                        bounds: playerBounds
+                    },
+                    obstacle: {
+                        x: obstacle.x,
+                        y: obstacle.y,
+                        bounds: obstacleBounds
+                    }
+                });
+                
+                this.handleCollision();
+            }
+        });
     }
 
     handleCollision() {
+        if (!this.checkingCollisions) return;
+        this.checkingCollisions = false;
+        
+        this.debugLog('Processing collision');
+        
+        // Add screen shake effect
         this.scene.cameras.main.shake(200, 0.01);
         
-        this.scene.time.delayedCall(300, () => {
-            this.scene.scene.restart();
-        });
+        // Trigger game over sequence
+        this.gameOverHandler.handleGameOver();
+    }
+
+    cleanup() {
+        this.debugLog('Cleaning up collision system');
+        
+        // Remove debug graphics
+        if (this.debugGraphics) {
+            this.debugGraphics.destroy();
+            this.debugGraphics = null;
+        }
+
+        // Remove event listeners
+        if (this.updateDebugGraphics) {
+            this.scene.events.off('update', this.updateDebugGraphics);
+            this.updateDebugGraphics = null;
+        }
+
+        // Clear references
+        this.player = null;
+        this.obstacleManager = null;
+        this.checkingCollisions = false;
+    }
+
+    reset() {
+        this.gameOverHandler.reset();
+        this.checkingCollisions = true;
     }
 }

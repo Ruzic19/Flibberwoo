@@ -1,3 +1,4 @@
+// src/scenes/game/GameScene.js
 import { GameSceneLoader } from './GameSceneLoader';
 import { GameSceneCollision } from './GameSceneCollision';
 import { GameSceneComponents } from './GameSceneComponents';
@@ -9,6 +10,7 @@ export default class GameScene extends Phaser.Scene {
         this.loader = new GameSceneLoader(this);
         this.collision = new GameSceneCollision(this);
         this.componentManager = new GameSceneComponents(this);
+        this.isShuttingDown = false;
     }
 
     debugLog(message, data = null) {
@@ -24,11 +26,7 @@ export default class GameScene extends Phaser.Scene {
 
     create() {
         this.debugLog('Create function started');
-        
-        // Reset any existing debug graphics
-        if (this.physics.world.debugGraphic) {
-            this.physics.world.debugGraphic.clear();
-        }
+        this.isShuttingDown = false;
         
         // Create all game components
         const components = this.componentManager.createComponents();
@@ -36,18 +34,21 @@ export default class GameScene extends Phaser.Scene {
         this.player = components.player;
         this.obstacleManager = components.obstacleManager;
         this.difficultyManager = components.difficultyManager;
-
+    
+        // Ensure collision component exists
+        this.collision = components.collision || new GameSceneCollision(this);
+        
         // Setup collision detection
-        this.collision.setupCollision(this.player, this.obstacleManager);
-
-        // Cleanup and position debug graphics properly
-        if (this.physics.world.debugGraphic) {
-            this.physics.world.debugGraphic.setDepth(1000);
-            this.physics.world.debugGraphic.setPosition(0, 0);
+        if (this.player && this.obstacleManager) {
+            this.collision.setupCollision(this.player, this.obstacleManager);
+        } else {
+            this.debugLog('Error: Player or ObstacleManager not initialized');
         }
     }
 
     update() {
+        if (this.isShuttingDown) return;
+
         if (this.background) {
             this.background.update();
         }
@@ -57,5 +58,31 @@ export default class GameScene extends Phaser.Scene {
         if (this.obstacleManager) {
             this.obstacleManager.update();
         }
+        if (this.collision) {
+            this.collision.update();
+        }
+    }
+
+    cleanup() {
+        if (this.isShuttingDown) return;
+        this.isShuttingDown = true;
+        
+        this.debugLog('Cleaning up GameScene');
+        
+        // Cleanup collision system first
+        if (this.collision) {
+            this.collision.cleanup();
+            this.collision = null;
+        }
+
+        // Remove event listeners
+        this.events.off('update');
+        this.events.off('shutdown');
+
+        // Clear game objects
+        this.background = null;
+        this.player = null;
+        this.obstacleManager = null;
+        this.difficultyManager = null;
     }
 }

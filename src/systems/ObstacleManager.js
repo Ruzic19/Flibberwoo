@@ -1,3 +1,4 @@
+// src/systems/ObstacleManager.js
 import { OBSTACLE_CONFIG } from '../config/obstacleConfig';
 import { ObstaclePool } from './ObstaclePool';
 import { ObstacleSpawner } from './ObstacleSpawner';

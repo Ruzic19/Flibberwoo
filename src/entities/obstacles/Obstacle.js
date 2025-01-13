@@ -1,3 +1,4 @@
+// src/entities/obstacles/Obstacle.js
 import { ObstacleHitbox } from './components/ObstacleHitbox';
 import { ObstaclePhysics } from './components/ObstaclePhysics';
 import { ObstacleState } from './ObstacleState';
@@ -7,7 +8,7 @@ export class Obstacle {
     constructor(scene, type) {
         this.scene = scene;
         this.type = type;
-        this.debug = false;
+        this.debug = true;
         
         if (this.debug) {
             console.log(`[Obstacle] Creating new obstacle of type: ${type}`);
@@ -27,13 +28,21 @@ export class Obstacle {
             .setDepth(10)
             .setScale(this.getScaleForType(this.type));
             
+        // Enable physics on the sprite
+        this.scene.physics.add.existing(sprite, false);
+        
+        // Configure physics body
+        sprite.body.setAllowGravity(false);
+        sprite.body.setImmovable(true);
+        
         if (this.debug) {
             console.log(`[Obstacle] Sprite created with dimensions:`, {
                 width: sprite.width,
                 height: sprite.height,
                 scale: sprite.scale,
                 displayWidth: sprite.displayWidth,
-                displayHeight: sprite.displayHeight
+                displayHeight: sprite.displayHeight,
+                body: sprite.body ? 'exists' : 'missing'
             });
         }
 
@@ -52,11 +61,20 @@ export class Obstacle {
         }
 
         this.state.activate(x, y, velocity);
-        this.sprite.setActive(true);
-        this.sprite.setVisible(true);
+        this.sprite.setActive(true).setVisible(true);
         this.sprite.setPosition(x, y);
-        this.physics.enable();
-        this.physics.setVelocity(-velocity);
+        
+        // Ensure physics body is enabled and properly configured
+        this.sprite.body.enable = true;
+        this.sprite.body.setVelocityX(-velocity);
+        
+        if (this.debug) {
+            console.log(`[Obstacle] Physics body status:`, {
+                enabled: this.sprite.body.enable,
+                velocity: this.sprite.body.velocity.x,
+                position: { x: this.sprite.x, y: this.sprite.y }
+            });
+        }
     }
 
     disable() {
@@ -65,9 +83,13 @@ export class Obstacle {
         }
 
         this.state.deactivate();
-        this.sprite.setActive(false);
-        this.sprite.setVisible(false);
-        this.physics.disable();
+        this.sprite.setActive(false).setVisible(false);
+        
+        // Disable physics body when not in use
+        if (this.sprite.body) {
+            this.sprite.body.enable = false;
+            this.sprite.body.setVelocity(0, 0);
+        }
     }
 
     update() {

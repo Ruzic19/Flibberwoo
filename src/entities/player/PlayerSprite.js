@@ -1,9 +1,11 @@
+// src/entities/player/PlayerSprite.js
 import { GAME_CONFIG } from '../../config/gameConfig';
 
 export class PlayerSprite {
     constructor(scene, x, y, scale) {
         this.scene = scene;
         this.scale = scale;
+        this.debug = true;
         
         // Create the main sprite
         this.sprite = scene.add.sprite(x, y, 'run-1')
@@ -13,20 +15,43 @@ export class PlayerSprite {
             
         this.sprite.texture.setFilter(Phaser.Textures.LINEAR);
         
-        // Enable physics on the sprite
+        // Enable physics
         scene.physics.add.existing(this.sprite);
         
-        // Configure the hitbox
-        this.configureHitbox();
+        // Configure physics body
+        const body = this.sprite.body;
+        body.setCollideWorldBounds(false);
+        body.setAllowGravity(false);
+        body.setImmovable(false);
+        body.setBounce(0, 0);
+        body.setFriction(0, 0);
         
+        if (this.debug) {
+            console.log('[PlayerSprite] Physics body initialized:', {
+                x: this.sprite.x,
+                y: this.sprite.y,
+                width: body.width,
+                height: body.height,
+                enabled: body.enable
+            });
+        }
+        
+        this.configureHitbox();
         this.snapToPixel();
     }
 
     configureHitbox() {
         const body = this.sprite.body;
-        body.setAllowGravity(false);
         this.updateHitboxForAnimation('run');
-        body.setImmovable(true);
+        
+        if (this.debug) {
+            console.log('[PlayerSprite] Hitbox configured:', {
+                width: body.width,
+                height: body.height,
+                offsetX: body.offset.x,
+                offsetY: body.offset.y
+            });
+        }
     }
 
     updateHitboxForAnimation(animKey) {
@@ -36,39 +61,27 @@ export class PlayerSprite {
         
         switch(animKey) {
             case 'crouch':
-                // Lower and smaller hitbox for crouching
-                body.setSize(
-                    width * 0.5,
-                    height * 0.4
-                );
-                body.setOffset(
-                    width * 0.25,
-                    height * 0.55
-                );
+                body.setSize(width * 0.5, height * 0.4);
+                body.setOffset(width * 0.25, height * 0.55);
                 break;
                 
             case 'jump':
-                // Standard hitbox but higher position for jumping
-                body.setSize(
-                    width * 0.5,
-                    height * 0.6
-                );
-                body.setOffset(
-                    width * 0.25,
-                    height * 0.2
-                );
+                body.setSize(width * 0.5, height * 0.6);
+                body.setOffset(width * 0.25, height * 0.2);
                 break;
                 
             default: // 'run'
-                // Standard running hitbox
-                body.setSize(
-                    width * 0.4,
-                    height * 0.6
-                );
-                body.setOffset(
-                    width * 0.33,
-                    height * 0.34
-                );
+                body.setSize(width * 0.4, height * 0.6);
+                body.setOffset(width * 0.33, height * 0.34);
+        }
+        
+        if (this.debug) {
+            console.log(`[PlayerSprite] Updated hitbox for ${animKey}:`, {
+                width: body.width,
+                height: body.height,
+                offsetX: body.offset.x,
+                offsetY: body.offset.y
+            });
         }
     }
 
