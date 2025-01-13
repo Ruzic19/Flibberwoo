@@ -38,36 +38,36 @@ export class PlayerSprite {
             case 'crouch':
                 // Lower and smaller hitbox for crouching
                 body.setSize(
-                    width * 0.5,    // 50% of sprite width
-                    height * 0.4    // 40% of sprite height
+                    width * 0.5,
+                    height * 0.4
                 );
                 body.setOffset(
-                    width * 0.25,   // Center horizontally
-                    height * 0.55   // Move down more for crouching
+                    width * 0.25,
+                    height * 0.55
                 );
                 break;
                 
             case 'jump':
                 // Standard hitbox but higher position for jumping
                 body.setSize(
-                    width * 0.5,    // 50% of sprite width
-                    height * 0.6    // 60% of sprite height
+                    width * 0.5,
+                    height * 0.6
                 );
                 body.setOffset(
-                    width * 0.25,   // Center horizontally
-                    height * 0.2    // Higher position for jump
+                    width * 0.25,
+                    height * 0.2
                 );
                 break;
                 
             default: // 'run'
                 // Standard running hitbox
                 body.setSize(
-                    width * 0.5,    // 50% of sprite width
-                    height * 0.6    // 60% of sprite height
+                    width * 0.4,
+                    height * 0.6
                 );
                 body.setOffset(
-                    width * 0.25,   // Center horizontally
-                    height * 0.3    // Lower position to match sprite better
+                    width * 0.33,
+                    height * 0.34
                 );
         }
     }

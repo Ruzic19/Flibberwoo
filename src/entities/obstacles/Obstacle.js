@@ -44,36 +44,94 @@ export class Obstacle {
     }
 
     configureHitbox() {
-        // Use displayWidth/Height which takes scale into account
-        const spriteWidth = this.sprite.displayWidth;
-        const spriteHeight = this.sprite.displayHeight;
-        
-        console.log(`[Obstacle] Configuring hitbox for ${this.type}:`, {
-            spriteWidth,
-            spriteHeight
-        });
-
-        // Make hitbox 80% of the sprite size
-        const hitboxWidth = spriteWidth * 0.8;
-        const hitboxHeight = spriteHeight * 0.8;
-        
-        // Calculate offset to center the hitbox
-        const offsetX = (spriteWidth - hitboxWidth) / 2;
-        const offsetY = (spriteHeight - hitboxHeight) / 2;
-
-        this.sprite.body.setSize(hitboxWidth, hitboxHeight);
-        this.sprite.body.setOffset(offsetX, offsetY);
-
-        console.log(`[Obstacle] Final hitbox configuration:`, {
-            hitboxWidth,
-            hitboxHeight,
-            offsetX,
-            offsetY,
-            finalBodySize: {
-                width: this.sprite.body.width,
-                height: this.sprite.body.height
+        try {
+            // Get the sprite's display dimensions (accounting for scale)
+            const spriteWidth = this.sprite.displayWidth;
+            const spriteHeight = this.sprite.displayHeight;
+            
+            console.log(`[Obstacle] Configuring hitbox for ${this.type}:`, {
+                spriteWidth,
+                spriteHeight,
+                scale: this.sprite.scale
+            });
+    
+            // Define hitbox dimensions based on obstacle type
+            let hitboxScale;
+            switch(this.type) {
+                case OBSTACLE_CONFIG.TYPES.SMALL: // spikes
+                    hitboxScale = {
+                        width: 0.5,   // 50% of sprite width
+                        height: 0.3,  // 30% of sprite height
+                        offsetXFactor: 0,
+                        offsetYFactor: 0.4  // Reduced from 0.6 for higher position
+                    };
+                    break;
+                    
+                case OBSTACLE_CONFIG.TYPES.MEDIUM: // box
+                    hitboxScale = {
+                        width: 0.38,   // 60% of sprite width
+                        height: 0.38,  // 60% of sprite height
+                        offsetXFactor: 0.1,
+                        offsetYFactor: 0.1   // Reduced from 0.4 for higher position
+                    };
+                    break;
+                    
+                case OBSTACLE_CONFIG.TYPES.LARGE: // rock-head
+                    hitboxScale = {
+                        width: 0.38,  // 55% of sprite width
+                        height: 0.38, // 55% of sprite height
+                        offsetXFactor: 0.1,
+                        offsetYFactor: 0.12   // Reduced from 0.4 for higher position
+                    };
+                    break;
+                    
+                default:
+                    hitboxScale = {
+                        width: 0.1,
+                        height: 0.1,
+                        offsetXFactor: 0,
+                        offsetYFactor: 0
+                    };
             }
-        });
+    
+            // Calculate hitbox dimensions
+            const hitboxWidth = Math.round(spriteWidth * hitboxScale.width);
+            const hitboxHeight = Math.round(spriteHeight * hitboxScale.height);
+            
+            // Adjust offset calculations:
+            // For X: Use a larger divisor to move hitbox more to the left
+            // For Y: Use the reduced offsetYFactor to move hitbox up
+            const offsetX = Math.round((spriteWidth - hitboxWidth) * hitboxScale.offsetXFactor); // Changed from 2.2 to 2.5
+            const offsetY = Math.round((spriteHeight - hitboxHeight) * hitboxScale.offsetYFactor);
+    
+            // Apply hitbox configuration
+            this.sprite.body.setSize(hitboxWidth, hitboxHeight);
+            this.sprite.body.setOffset(offsetX, offsetY);
+    
+            // Debug logging
+            console.log(`[Obstacle] Hitbox configured for ${this.type}:`, {
+                originalSize: {
+                    width: spriteWidth,
+                    height: spriteHeight
+                },
+                hitboxSize: {
+                    width: hitboxWidth,
+                    height: hitboxHeight
+                },
+                offset: {
+                    x: offsetX,
+                    y: offsetY
+                },
+                finalBodyBounds: {
+                    width: this.sprite.body.width,
+                    height: this.sprite.body.height,
+                    top: this.sprite.body.top,
+                    bottom: this.sprite.body.bottom
+                }
+            });
+        } catch (error) {
+            console.error(`[Obstacle] Error configuring hitbox for ${this.type}:`, error);
+        }
     }
 
     enable(x, y, velocity) {

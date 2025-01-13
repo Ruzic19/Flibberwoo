@@ -28,7 +28,7 @@ const config = {
             debug: true,
             debugShowBody: true,
             debugShowStaticBody: true,
-            debugShowVelocity: false,  // This might be causing the green lines
+            debugShowVelocity: false,
             debugBodyColor: 0xff00ff,
             debugStaticBodyColor: 0xff00ff
         }
