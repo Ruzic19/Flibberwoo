@@ -4,12 +4,14 @@ export class PlayerPhysics {
         this.currentVelocity = 0;
         this.jumpHeight = 0;
         this.isHoldingJump = false;
+        this.lastUpdateTime = 0;
     }
 
     startJump() {
         this.currentVelocity = this.config.JUMP_VELOCITY;
         this.jumpHeight = 0;
         this.isHoldingJump = true;
+        this.lastUpdateTime = performance.now();
     }
 
     releaseJump() {
@@ -20,6 +22,10 @@ export class PlayerPhysics {
     }
 
     updateJump(currentY, initialY) {
+        const currentTime = performance.now();
+        const deltaTime = (currentTime - this.lastUpdateTime) / (1000 / 60); // Normalize to 60 FPS
+        this.lastUpdateTime = currentTime;
+
         this.jumpHeight = initialY - currentY;
 
         if (this.jumpHeight >= this.config.MAX_JUMP_HEIGHT) {
@@ -29,8 +35,11 @@ export class PlayerPhysics {
             this.currentVelocity = this.config.FALL_VELOCITY;
         }
 
-        this.currentVelocity += this.config.GRAVITY;
-        let newY = currentY + this.currentVelocity;
+        // Apply gravity with deltaTime
+        this.currentVelocity += this.config.GRAVITY * deltaTime;
+        
+        // Apply velocity with deltaTime
+        let newY = currentY + (this.currentVelocity * deltaTime);
 
         if (this.jumpHeight > this.config.MAX_JUMP_HEIGHT) {
             newY = initialY - this.config.MAX_JUMP_HEIGHT;
@@ -47,5 +56,6 @@ export class PlayerPhysics {
         this.currentVelocity = 0;
         this.jumpHeight = 0;
         this.isHoldingJump = false;
+        this.lastUpdateTime = performance.now();
     }
 }
