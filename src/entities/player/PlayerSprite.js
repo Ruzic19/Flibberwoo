@@ -71,8 +71,8 @@ export class PlayerSprite {
                 break;
                 
             default: // 'run'
-                body.setSize(width * 0.4, height * 0.6);
-                body.setOffset(width * 0.33, height * 0.34);
+                body.setSize(width * 0.35, height * 0.55);
+                body.setOffset(width * 0.33, height * 0.36);
         }
         
         if (this.debug) {

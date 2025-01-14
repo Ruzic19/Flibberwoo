@@ -68,38 +68,59 @@ export class GameSceneCollision {
     }
 
     update() {
+        // Early returns if collision checking is disabled or required objects are missing
         if (!this.checkingCollisions || !this.player || !this.obstacleManager) return;
-
+    
         const playerSprite = this.player.sprite.sprite;
-        if (!playerSprite || !playerSprite.active) return;
-
-        const playerBounds = playerSprite.getBounds();
+        if (!playerSprite || !playerSprite.active || !playerSprite.body) return;
+    
+        const playerBody = playerSprite.body;
         const obstacles = this.obstacleManager.getActiveObstacles();
         
         if (!obstacles) return;
         
+        let collisionDetected = false;
+        
         obstacles.forEach(obstacle => {
-            if (!obstacle || !obstacle.active) return;
+            if (!obstacle || !obstacle.active || !obstacle.body) return;
             
-            const obstacleBounds = obstacle.getBounds();
+            const obstacleBody = obstacle.body;
             
-            if (Phaser.Geom.Rectangle.Overlaps(playerBounds, obstacleBounds)) {
-                this.debugLog('Collision detected between:', {
-                    player: {
-                        x: playerSprite.x,
-                        y: playerSprite.y,
-                        bounds: playerBounds
-                    },
-                    obstacle: {
-                        x: obstacle.x,
-                        y: obstacle.y,
-                        bounds: obstacleBounds
-                    }
-                });
+            // Get the actual physics bodies bounds
+            const playerBounds = {
+                left: playerBody.x,
+                right: playerBody.x + playerBody.width,
+                top: playerBody.y,
+                bottom: playerBody.y + playerBody.height
+            };
+            
+            const obstacleBounds = {
+                left: obstacleBody.x,
+                right: obstacleBody.x + obstacleBody.width,
+                top: obstacleBody.y,
+                bottom: obstacleBody.y + obstacleBody.height
+            };
+            
+            // Check for actual physics body overlap
+            if (!(playerBounds.right < obstacleBounds.left || 
+                  playerBounds.left > obstacleBounds.right || 
+                  playerBounds.bottom < obstacleBounds.top || 
+                  playerBounds.top > obstacleBounds.bottom)) {
                 
-                this.handleCollision();
+                if (this.debug) {
+                    console.log('[GameSceneCollision] Collision detected between:', {
+                        player: playerBounds,
+                        obstacle: obstacleBounds
+                    });
+                }
+                
+                collisionDetected = true;
             }
         });
+        
+        if (collisionDetected) {
+            this.handleCollision();
+        }
     }
 
     handleCollision() {
