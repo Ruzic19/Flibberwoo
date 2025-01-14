@@ -108,6 +108,24 @@ export class GameSceneCollision {
         
         this.debugLog('Processing collision');
         
+        // Stop all animations
+        if (this.player && this.player.sprite) {
+            this.player.sprite.sprite.anims.stop();
+        }
+        
+        // Stop all obstacle animations and movement
+        if (this.obstacleManager) {
+            const obstacles = this.obstacleManager.getActiveObstacles();
+            obstacles.forEach(obstacle => {
+                if (obstacle.anims) obstacle.anims.stop();
+            });
+        }
+        
+        // Stop background parallax
+        if (this.scene.background) {
+            this.scene.background.enabled = false;
+        }
+        
         // Add screen shake effect
         this.scene.cameras.main.shake(200, 0.01);
         

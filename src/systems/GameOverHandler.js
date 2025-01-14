@@ -11,6 +11,10 @@ export class GameOverHandler {
         if (this.isGameOver) return;
         this.isGameOver = true;
 
+        // Pause the scene's physics and timers
+        this.scene.physics.pause();
+        this.scene.time.paused = true;
+
         if (this.debug) {
             console.log('[GameOverHandler] Game over sequence initiated');
         }
@@ -73,6 +77,10 @@ export class GameOverHandler {
             // Remove event listeners
             menuText.removeAllListeners();
             this.scene.input.keyboard.off('keydown-SPACE', this.returnToMenuCallback);
+            
+            // Resume physics and timers before changing scenes
+            this.scene.physics.resume();
+            this.scene.time.paused = false;
             
             // Start menu scene and then stop current scene
             this.scene.scene.start('GameMenu');
