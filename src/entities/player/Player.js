@@ -4,7 +4,7 @@ import { PlayerSprite } from './PlayerSprite';
 import { PlayerAnimations } from './PlayerAnimations';
 import { PlayerControls } from './PlayerControls';
 import { PlayerState } from './states/PlayerState';
-import { PlayerPhysics } from './PlayerPhysics';
+import { PlayerPhysics } from './components/PlayerPhysics';
 
 export default class Player {
     constructor(scene, x, y) {

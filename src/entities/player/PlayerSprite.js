@@ -1,5 +1,6 @@
 // src/entities/player/PlayerSprite.js
 import { GAME_CONFIG } from '../../config/gameConfig';
+import { PlayerHitbox } from './components/PlayerHitbox';
 
 export class PlayerSprite {
     constructor(scene, x, y, scale) {
@@ -36,53 +37,11 @@ export class PlayerSprite {
             });
         }
         
-        this.configureHitbox();
+        // Initialize hitbox manager
+        this.hitbox = new PlayerHitbox(this.sprite);
+        this.hitbox.configure();
+        
         this.snapToPixel();
-    }
-
-    configureHitbox() {
-        const body = this.sprite.body;
-        this.updateHitboxForAnimation('run');
-        
-        if (this.debug) {
-            console.log('[PlayerSprite] Hitbox configured:', {
-                width: body.width,
-                height: body.height,
-                offsetX: body.offset.x,
-                offsetY: body.offset.y
-            });
-        }
-    }
-
-    updateHitboxForAnimation(animKey) {
-        const body = this.sprite.body;
-        const width = this.sprite.width;
-        const height = this.sprite.height;
-        
-        switch(animKey) {
-            case 'crouch':
-                body.setSize(width * 0.5, height * 0.4);
-                body.setOffset(width * 0.25, height * 0.55);
-                break;
-                
-            case 'jump':
-                body.setSize(width * 0.5, height * 0.6);
-                body.setOffset(width * 0.25, height * 0.2);
-                break;
-                
-            default: // 'run'
-                body.setSize(width * 0.35, height * 0.55);
-                body.setOffset(width * 0.33, height * 0.36);
-        }
-        
-        if (this.debug) {
-            console.log(`[PlayerSprite] Updated hitbox for ${animKey}:`, {
-                width: body.width,
-                height: body.height,
-                offsetX: body.offset.x,
-                offsetY: body.offset.y
-            });
-        }
     }
 
     snapToPixel() {
@@ -92,7 +51,7 @@ export class PlayerSprite {
 
     playAnimation(key) {
         this.sprite.play(key);
-        this.updateHitboxForAnimation(key);
+        this.hitbox.updateForAnimation(key);
     }
 
     setY(y) {
