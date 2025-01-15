@@ -25,12 +25,13 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: true,
-            debugShowBody: true,
-            debugShowStaticBody: true,
-            debugShowVelocity: false,
-            debugBodyColor: 0xff00ff,
-            debugStaticBodyColor: 0xff00ff
+            debug: false, // CHANGED: set to false to disable global debug visuals
+            // Commented out global debug settings:
+            // debugShowBody: true,
+            // debugShowStaticBody: true,
+            // debugShowVelocity: false,
+            // debugBodyColor: 0xff00ff,
+            // debugStaticBodyColor: 0xff00ff
         }
     }
 };

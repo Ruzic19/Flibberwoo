@@ -10,6 +10,11 @@ export class GameSceneCollision {
         this.debugGraphics = null;
         this.player = null;
         this.obstacleManager = null;
+        // Added new property to control which elements show debug visuals
+        this.debugElements = {
+            player: false,
+            obstacles: true
+        };
     }
 
     debugLog(message, data = null) {
@@ -38,7 +43,7 @@ export class GameSceneCollision {
                 
                 // Draw player hitbox if it exists
                 const playerSprite = this.player.sprite.sprite;
-                if (playerSprite && playerSprite.body) {
+                if (this.debugElements.player && playerSprite && playerSprite.body) {
                     this.debugGraphics.strokeRect(
                         playerSprite.body.x, 
                         playerSprite.body.y, 
@@ -48,18 +53,21 @@ export class GameSceneCollision {
                 }
                 
                 // Draw obstacle hitboxes
-                const obstacles = this.obstacleManager.getActiveObstacles();
-                if (obstacles) {
-                    obstacles.forEach(obstacle => {
-                        if (obstacle.body && obstacle.active) {
-                            this.debugGraphics.strokeRect(
-                                obstacle.body.x,
-                                obstacle.body.y,
-                                obstacle.body.width,
-                                obstacle.body.height
-                            );
-                        }
-                    });
+                // Added condition to check if obstacle debug should be shown
+                if (this.debugElements.obstacles) {
+                    const obstacles = this.obstacleManager.getActiveObstacles();
+                    if (obstacles) {
+                        obstacles.forEach(obstacle => {
+                            if (obstacle.body && obstacle.active) {
+                                this.debugGraphics.strokeRect(
+                                    obstacle.body.x,
+                                    obstacle.body.y,
+                                    obstacle.body.width,
+                                    obstacle.body.height
+                                );
+                            }
+                        });
+                    }
                 }
             };
             
