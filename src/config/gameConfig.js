@@ -18,8 +18,6 @@ export const GAME_CONFIG = {
         }
     },
     SCROLL_SPEED: {
-        BASE: 3,           // Base speed
-        INCREMENT: 1,      // Smaller increment for smoother acceleration
-        MAX_SPEED: 20      // Maximum speed that won't break the game
+        BASE: 3
     }
 };

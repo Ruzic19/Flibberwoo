@@ -1,3 +1,4 @@
+// src/systems/ObstacleManager.js
 import { OBSTACLE_CONFIG } from '../config/obstacleConfig';
 import { ObstaclePool } from './ObstaclePool';
 import { ObstacleSpawner } from './ObstacleSpawner';
@@ -5,7 +6,7 @@ import { ObstacleSpawner } from './ObstacleSpawner';
 export class ObstacleManager {
     constructor(scene) {
         this.scene = scene;
-        this.debug = true;
+        this.debug = false;
         
         this.pool = new ObstaclePool(scene);
         this.pool.initialize(
@@ -15,22 +16,32 @@ export class ObstacleManager {
         
         this.spawner = new ObstacleSpawner(scene, this.pool);
         
-        // Initial speed setup
-        this.currentSpeed = 300; // Initial obstacle speed (100 * background speed of 3)
-        this.spawner.updateSpeed(this.currentSpeed);
-        
         if (this.debug) {
-            console.log('[ObstacleManager] Initial speed:', this.currentSpeed);
+            console.log('[ObstacleManager] Initializing obstacle system');
         }
     }
 
-    updateDifficulty(newSpeed, distanceDecrement) {
-        if (this.debug) {
-            console.log('[ObstacleManager] Updating speed to:', newSpeed);
-        }
+    updateDifficulty(speedIncrement, distanceDecrement) {
+        this.spawner.updateSpeed(
+            this.spawner.currentSpeed + speedIncrement
+        );
+        
+        OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN = Math.max(
+            OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN - distanceDecrement,
+            100
+        );
+        OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX = Math.max(
+            OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX - distanceDecrement,
+            200
+        );
 
-        this.currentSpeed = newSpeed;
-        this.spawner.updateSpeed(this.currentSpeed);
+        if (this.debug) {
+            console.log('[ObstacleManager] Difficulty updated', {
+                newSpeed: this.spawner.currentSpeed,
+                newGroupSpacingMin: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN,
+                newGroupSpacingMax: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX
+            });
+        }
     }
 
     update() {
@@ -40,9 +51,5 @@ export class ObstacleManager {
 
     getActiveObstacles() {
         return this.pool.getAllActive();
-    }
-
-    getCurrentSpeed() {
-        return this.currentSpeed;
     }
 }
