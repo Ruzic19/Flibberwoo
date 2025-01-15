@@ -1,74 +1,87 @@
+import ParallaxBackground from '../systems/ParallaxBackground';
+import { LAYER_INFO } from '../config/layerConfig';
+
 export default class GameMenu extends Phaser.Scene {
     constructor() {
         super({ key: 'GameMenu' });
     }
 
-    debug(message, data = null) {
-        console.log(`[GameMenu] ${message}`, data || '');
+    preload() {
+        // Load all background layers
+        this.load.baseURL = '/';
+        this.load.crossOrigin = 'anonymous';
+        
+        LAYER_INFO.forEach(layer => {
+            const path = `assets/background/${layer.file}`;
+            this.load.image(layer.key, path);
+        });
     }
 
     create() {
-        this.debug('Creating game menu');
+        // Create background first
+        this.background = new ParallaxBackground(this, LAYER_INFO);
         
-        // Get the center coordinates of the game
+        // Get the center coordinates
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
 
-        this.debug('Screen center:', { x: centerX, y: centerY });
+        // Create a semi-transparent overlay (matching game over style)
+        const overlay = this.add.rectangle(
+            0, 0,
+            this.cameras.main.width,
+            this.cameras.main.height,
+            0x000000, 0.4
+        );
+        overlay.setOrigin(0, 0);
+        overlay.setDepth(100);
 
         // Add title text
-        const titleText = this.add.text(centerX, centerY - 100, 'Flibberwoo', {
-            fontSize: '48px',
-            fill: '#fff',
-            fontFamily: 'Arial, sans-serif'
-        }).setOrigin(0.5);
-
-        this.debug('Added title text');
-
-        // Create start button with background
-        const buttonWidth = 200;
-        const buttonHeight = 60;
-        const buttonX = centerX - buttonWidth / 2;
-        const buttonY = centerY - buttonHeight / 2;
-
-        // Add button background
-        const buttonBackground = this.add.rectangle(
+        const titleText = this.add.text(
             centerX,
-            centerY,
-            buttonWidth,
-            buttonHeight,
-            0x4a4a4a
-        ).setInteractive();
+            centerY - 50,
+            'Flibberwoo',
+            {
+                fontSize: '48px',
+                fill: '#fff',
+                fontFamily: 'Arial'
+            }
+        );
+        titleText.setOrigin(0.5);
+        titleText.setDepth(101);
 
-        // Add button text
-        const startButton = this.add.text(centerX, centerY, 'Start Game', {
-            fontSize: '32px',
-            fill: '#fff',
-            fontFamily: 'Arial, sans-serif'
-        })
-        .setOrigin(0.5)
-        .setInteractive();
+        // Add start game text/button
+        const startButton = this.add.text(
+            centerX,
+            centerY + 50,
+            'Start Game',
+            {
+                fontSize: '24px',
+                fill: '#fff',
+                fontFamily: 'Arial'
+            }
+        );
+        startButton.setOrigin(0.5);
+        startButton.setDepth(101);
+        startButton.setInteractive({ useHandCursor: true });
 
-        this.debug('Added start button');
-
-        // Button hover effects
-        buttonBackground.on('pointerover', () => {
-            buttonBackground.setFillStyle(0x666666);
-            startButton.setStyle({ fill: '#ff0' });
+        // Add hover effects
+        startButton.on('pointerover', () => {
+            startButton.setStyle({ fill: '#ffff00' });
         });
 
-        buttonBackground.on('pointerout', () => {
-            buttonBackground.setFillStyle(0x4a4a4a);
-            startButton.setStyle({ fill: '#fff' });
+        startButton.on('pointerout', () => {
+            startButton.setStyle({ fill: '#ffffff' });
         });
 
-        // Click handlers
-        const startGame = () => {
-            this.debug('Starting game scene');
+        // Start game on click
+        startButton.on('pointerdown', () => {
             this.scene.start('GameScene');
-        };
+        });
+    }
 
-        buttonBackground.on('pointerdown', startGame);
-        startButton.on('pointerdown', startGame);
+    update() {
+        if (this.background) {
+            this.background.update();
+        }
     }
 }
