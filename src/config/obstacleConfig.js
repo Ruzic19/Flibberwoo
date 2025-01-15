@@ -9,7 +9,7 @@ export const OBSTACLE_CONFIG = {
         MIN_DISTANCE: 150,
         MAX_DISTANCE: 750,
         INITIAL_DELAY: 2000,
-        BASE_SPEED: 300,     
+        BASE_SPEED: 180,     // Adjusted to match background movement
         GROUP_CHANCE: 0.4,    
         GROUP_SIZE: {
             MIN: 2,          

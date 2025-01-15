@@ -1,3 +1,4 @@
+// src/systems/ParallaxBackground.js
 import { GAME_CONFIG } from '../config/gameConfig';
 
 export default class ParallaxBackground {
@@ -5,7 +6,13 @@ export default class ParallaxBackground {
         this.scene = scene;
         this.layers = [];
         this.lastUpdateTime = performance.now();
+        this.baseSpeed = GAME_CONFIG.SCROLL_SPEED.BASE;
         console.log('[ParallaxBackground] Starting layer creation');
+        
+        // Calculate and store layer1's speed
+        const layer1Index = 1; // layer1 is the second layer
+        this.layer1SpeedMultiplier = layer1Index / (layerInfo.length - 1);
+        
         this.createLayers(layerInfo);
     }
 
@@ -44,12 +51,16 @@ export default class ParallaxBackground {
         });
     }
 
+    getLayer1PixelsPerFrame() {
+        return this.baseSpeed * this.layer1SpeedMultiplier;
+    }
+
     update() {
         const currentTime = performance.now();
         const deltaTime = (currentTime - this.lastUpdateTime) / (1000 / 60);
         this.lastUpdateTime = currentTime;
 
-        const baseSpeed = GAME_CONFIG.SCROLL_SPEED.BASE * deltaTime;
+        const baseSpeed = this.baseSpeed * deltaTime;
         
         for (let i = 0; i < this.layers.length; i += 2) {
             const sprite1 = this.layers[i];

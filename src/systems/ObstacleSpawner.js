@@ -5,7 +5,9 @@ export class ObstacleSpawner {
         this.scene = scene;
         this.obstaclePool = obstaclePool;
         this.nextSpawnTime = this.scene.time.now + OBSTACLE_CONFIG.SPAWN.INITIAL_DELAY;
-        this.currentSpeed = OBSTACLE_CONFIG.SPAWN.BASE_SPEED;
+        // Calculate initial speed based on background layer1 speed
+        const pixelsPerSecond = OBSTACLE_CONFIG.SPAWN.BASE_SPEED;
+        this.currentSpeed = pixelsPerSecond;
         this.groupMode = false;
         this.remainingGroupSize = 0;
         this.debug = false;
@@ -13,6 +15,9 @@ export class ObstacleSpawner {
 
     updateSpeed(newSpeed) {
         this.currentSpeed = Math.min(newSpeed, OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED);
+        if (this.debug) {
+            console.log('[ObstacleSpawner] Speed updated:', this.currentSpeed);
+        }
     }
 
     calculateSpawnDelay() {

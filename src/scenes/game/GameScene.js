@@ -51,7 +51,28 @@ export default class GameScene extends Phaser.Scene {
 
         if (this.background) {
             this.background.update();
+            
+            // Get the background layer1 speed and sync obstacles if needed
+            if (this.obstacleManager && this.background.getLayer1PixelsPerFrame) {
+                const layer1Speed = this.background.getLayer1PixelsPerFrame();
+                // Convert pixels per frame to pixels per second (assuming 60 FPS)
+                const pixelsPerSecond = layer1Speed * 60;
+                // Scale the speed appropriately (you may need to adjust this multiplier)
+                const targetSpeed = pixelsPerSecond * 10;
+                
+                if (this.debugMode) {
+                    console.log('[GameScene] Syncing speeds:', {
+                        layer1Speed,
+                        targetSpeed
+                    });
+                }
+                
+                if (this.obstacleManager.spawner) {
+                    this.obstacleManager.spawner.updateSpeed(targetSpeed);
+                }
+            }
         }
+        
         if (this.player) {
             this.player.update();
         }
