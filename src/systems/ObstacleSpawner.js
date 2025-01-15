@@ -8,11 +8,14 @@ export class ObstacleSpawner {
         this.currentSpeed = OBSTACLE_CONFIG.SPAWN.BASE_SPEED;
         this.groupMode = false;
         this.remainingGroupSize = 0;
-        this.debug = false;
+        this.debug = true;
     }
 
     updateSpeed(newSpeed) {
-        this.currentSpeed = Math.min(newSpeed, OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED);
+        this.currentSpeed = newSpeed;
+        if (this.debug) {
+            console.log('[ObstacleSpawner] Speed updated:', this.currentSpeed);
+        }
     }
 
     calculateSpawnDelay() {
@@ -45,12 +48,6 @@ export class ObstacleSpawner {
             (OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN + 1) + 
             OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN
         );
-
-        if (this.debug) {
-            console.log('[ObstacleSpawner] Starting new group', { 
-                size: this.remainingGroupSize 
-            });
-        }
     }
 
     calculateDistance() {
@@ -88,11 +85,13 @@ export class ObstacleSpawner {
             OBSTACLE_CONFIG.SPAWN.Y_POSITION[this.getTypeName(randomType)];
         
         if (this.debug) {
-            console.log(`[ObstacleSpawner] Spawning obstacle at position`, { 
-                x, y, speed: this.currentSpeed 
+            console.log(`[ObstacleSpawner] Spawning ${randomType} at:`, { 
+                x, y, 
+                speed: this.currentSpeed 
             });
         }
         
+        // Set exact speed when enabling the obstacle
         obstacle.enable(x, y, this.currentSpeed);
         
         const { delay } = this.calculateSpawnDelay();

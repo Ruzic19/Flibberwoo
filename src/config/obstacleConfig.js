@@ -30,12 +30,12 @@ export const OBSTACLE_CONFIG = {
         }
     },
     DIFFICULTY: {
-        SPEED_INCREMENT: 20,
+        SPEED_INCREMENT: 40,       // Scaled increment
         DISTANCE_DECREMENT: 50,
-        INTERVAL: 15000,
+        INTERVAL: 7000,           // Speed up every 7 seconds
         MIN_SPAWN_DISTANCE: 150,
         MAX_SPAWN_DISTANCE: 750,
-        MAX_SPEED: 1200
+        MAX_SPEED: 800           // Adjusted maximum speed (40x background speed)
     },
     SCALE: {
         SMALL: 2,
