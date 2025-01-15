@@ -4,6 +4,7 @@ export default class ParallaxBackground {
     constructor(scene, layerInfo) {
         this.scene = scene;
         this.layers = [];
+        this.lastUpdateTime = performance.now();
         console.log('[ParallaxBackground] Starting layer creation');
         this.createLayers(layerInfo);
     }
@@ -54,7 +55,11 @@ export default class ParallaxBackground {
     }
 
     update() {
-        const baseSpeed = GAME_CONFIG.SCROLL_SPEED.BASE;
+        const currentTime = performance.now();
+        const deltaTime = (currentTime - this.lastUpdateTime) / (1000 / 60); // Normalize to 60 FPS
+        this.lastUpdateTime = currentTime;
+
+        const baseSpeed = GAME_CONFIG.SCROLL_SPEED.BASE * deltaTime;
         
         for (let i = 0; i < this.layers.length; i += 2) {
             const sprite1 = this.layers[i];

@@ -25,7 +25,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: false, // CHANGED: set to false to disable global debug visuals
+            debug: true, // CHANGED: set to false to disable global debug visuals
             // Commented out global debug settings:
             // debugShowBody: true,
             // debugShowStaticBody: true,

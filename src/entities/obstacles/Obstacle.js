@@ -93,8 +93,11 @@ export class Obstacle {
     }
 
     update() {
-        if (this.sprite.active && this.sprite.x < -100) {
-            this.disable();
+        if (this.sprite.active) {
+            this.physics.update(); // Add this line
+            if (this.sprite.x < -100) {
+                this.disable();
+            }
         }
     }
 
