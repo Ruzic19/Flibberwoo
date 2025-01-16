@@ -1,7 +1,7 @@
 // src/entities/obstacles/Obstacle.js
 import { ObstacleHitbox } from './components/ObstacleHitbox';
 import { ObstaclePhysics } from './components/ObstaclePhysics';
-import { ObstacleState } from './ObstacleState';
+import { ObstacleState } from './states/ObstacleState';
 import { OBSTACLE_CONFIG } from '../../config/obstacleConfig';
 
 export class Obstacle {
