@@ -23,7 +23,8 @@ export class Obstacle {
     }
 
     createSprite() {
-        const sprite = this.scene.add.sprite(0, 0, this.type)
+        // Initialize sprite off-screen to prevent visibility during pool creation
+        const sprite = this.scene.add.sprite(-1000, -1000, this.type)
             .setOrigin(0.5)
             .setDepth(10)
             .setScale(this.getScaleForType(this.type));
