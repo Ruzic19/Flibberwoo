@@ -34,6 +34,7 @@ export default class GameScene extends Phaser.Scene {
         this.player = components.player;
         this.obstacleManager = components.obstacleManager;
         this.difficultyManager = components.difficultyManager;
+        this.scoringSystem = components.scoringSystem;
     
         // Ensure collision component exists
         this.collision = components.collision || new GameSceneCollision(this);
@@ -82,6 +83,9 @@ export default class GameScene extends Phaser.Scene {
         if (this.collision) {
             this.collision.update();
         }
+        if (this.scoringSystem) {
+            this.scoringSystem.update();
+        }
     }
 
     cleanup() {
@@ -105,5 +109,6 @@ export default class GameScene extends Phaser.Scene {
         this.player = null;
         this.obstacleManager = null;
         this.difficultyManager = null;
+        this.scoringSystem = null;
     }
 }

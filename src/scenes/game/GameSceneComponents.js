@@ -1,9 +1,11 @@
+// src/scenes/game/GameSceneComponents.js
 import { GAME_CONFIG } from '../../config/gameConfig';
 import { LAYER_INFO } from '../../config/layerConfig';
 import Player from '../../entities/player/Player';
 import ParallaxBackground from '../../systems/ParallaxBackground';
 import { ObstacleManager } from '../../systems/ObstacleManager';
 import { DifficultyManager } from '../../systems/DifficultyManager';
+import { ScoringSystem } from '../../systems/ScoringSystem';  // Add this import
 
 export class GameSceneComponents {
     constructor(scene) {
@@ -13,7 +15,8 @@ export class GameSceneComponents {
             background: null,
             player: null,
             obstacleManager: null,
-            difficultyManager: null
+            difficultyManager: null,
+            scoringSystem: null  // Add this line
         };
     }
 
@@ -30,6 +33,7 @@ export class GameSceneComponents {
         this.createPlayer();
         this.createObstacleSystem();
         this.createDifficultyManager();
+        this.createScoringSystem();  // Add this line
 
         return this.components;
     }
@@ -56,5 +60,10 @@ export class GameSceneComponents {
             this.scene, 
             this.components.obstacleManager
         );
+    }
+
+    createScoringSystem() {  // Add this method
+        this.debugLog('Initializing scoring system');
+        this.components.scoringSystem = new ScoringSystem(this.scene);
     }
 }

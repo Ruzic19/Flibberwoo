@@ -136,6 +136,11 @@ export class GameSceneCollision {
         this.checkingCollisions = false;
         
         this.debugLog('Processing collision');
+
+        // Immediately freeze the scoring system
+        if (this.scene.scoringSystem) {
+            this.scene.scoringSystem.freeze();
+        }
         
         // Stop all animations
         if (this.player && this.player.sprite) {

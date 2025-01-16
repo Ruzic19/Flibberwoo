@@ -19,6 +19,9 @@ export class GameOverHandler {
             console.log('[GameOverHandler] Game over sequence initiated');
         }
 
+        // Get final score before adding game over text
+        const finalScore = this.scene.scoringSystem ? this.scene.scoringSystem.getCurrentScore() : 0;
+
         // Create a semi-transparent overlay
         const overlay = this.scene.add.rectangle(
             0, 0,
@@ -32,7 +35,7 @@ export class GameOverHandler {
         // Add "Game Over" text
         const gameOverText = this.scene.add.text(
             this.scene.cameras.main.centerX,
-            this.scene.cameras.main.centerY - 50,
+            this.scene.cameras.main.centerY - 80,
             'Game Over',
             {
                 fontSize: '48px',
@@ -42,6 +45,20 @@ export class GameOverHandler {
         );
         gameOverText.setOrigin(0.5);
         gameOverText.setDepth(101);
+
+        // Add final score text
+        const scoreText = this.scene.add.text(
+            this.scene.cameras.main.centerX,
+            this.scene.cameras.main.centerY - 20,
+            `Final Score: ${finalScore}`,
+            {
+                fontSize: '32px',
+                fill: '#fff',
+                fontFamily: 'Arial'
+            }
+        );
+        scoreText.setOrigin(0.5);
+        scoreText.setDepth(101);
 
         // Add "Return to Menu" text that acts as a button
         const menuText = this.scene.add.text(
