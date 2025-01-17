@@ -18,35 +18,39 @@ export class Obstacle {
         this.hitbox = new ObstacleHitbox(this.sprite, type);
         this.physics = new ObstaclePhysics(this.sprite, scene);
         this.state = new ObstacleState();
+
+        this.startTime = 0;
+        this.initialY = 0;
+        this.verticalMovementEnabled = type === OBSTACLE_CONFIG.TYPES.BEE;
         
         this.initialize();
     }
 
     createSprite() {
-        // Initialize sprite off-screen to prevent visibility during pool creation
+        // Initialize sprite off-screen
         const sprite = this.scene.add.sprite(-1000, -1000, this.type)
             .setOrigin(0.5)
             .setDepth(10)
             .setScale(this.getScaleForType(this.type));
             
+        // Create animation for bee
+        if (this.type === OBSTACLE_CONFIG.TYPES.BEE && !this.scene.anims.exists('bee-fly')) {
+            this.scene.anims.create({
+                key: 'bee-fly',
+                frames: this.scene.anims.generateFrameNumbers(this.type, {
+                    start: 0,
+                    end: OBSTACLE_CONFIG.ANIMATIONS.BEE.frames - 1
+                }),
+                frameRate: OBSTACLE_CONFIG.ANIMATIONS.BEE.frameRate,
+                repeat: -1
+            });
+        }
+        
         // Enable physics on the sprite
         this.scene.physics.add.existing(sprite, false);
-        
-        // Configure physics body
         sprite.body.setAllowGravity(false);
         sprite.body.setImmovable(true);
         
-        if (this.debug) {
-            console.log(`[Obstacle] Sprite created with dimensions:`, {
-                width: sprite.width,
-                height: sprite.height,
-                scale: sprite.scale,
-                displayWidth: sprite.displayWidth,
-                displayHeight: sprite.displayHeight,
-                body: sprite.body ? 'exists' : 'missing'
-            });
-        }
-
         return sprite;
     }
 
@@ -63,18 +67,27 @@ export class Obstacle {
 
         this.state.activate(x, y, velocity);
         this.sprite.setActive(true).setVisible(true);
-        this.sprite.setPosition(x, y);
         
-        // Ensure physics body is enabled and properly configured
+        // Store initial Y position, start time, and random speed for vertical movement
+        if (this.verticalMovementEnabled) {
+            this.initialY = y;
+            this.startTime = this.scene.time.now;
+            
+            // Assign random vertical speed
+            const speedConfig = OBSTACLE_CONFIG.ANIMATIONS.BEE.verticalMovement.speed;
+            this.verticalSpeed = Phaser.Math.FloatBetween(speedConfig.min, speedConfig.max);
+            
+            if (this.debug) {
+                console.log(`[Obstacle] Bee spawned with vertical speed:`, this.verticalSpeed);
+            }
+        }
+        
+        this.sprite.setPosition(x, y);
         this.sprite.body.enable = true;
         this.sprite.body.setVelocityX(-velocity);
         
-        if (this.debug) {
-            console.log(`[Obstacle] Physics body status:`, {
-                enabled: this.sprite.body.enable,
-                velocity: this.sprite.body.velocity.x,
-                position: { x: this.sprite.x, y: this.sprite.y }
-            });
+        if (this.type === OBSTACLE_CONFIG.TYPES.BEE) {
+            this.sprite.play('bee-fly');
         }
     }
 
@@ -95,10 +108,39 @@ export class Obstacle {
 
     update() {
         if (this.sprite.active) {
-            this.physics.update(); // Add this line
+            if (this.verticalMovementEnabled) {
+                this.updateVerticalPosition();
+            }
+            
             if (this.sprite.x < -100) {
                 this.disable();
             }
+        }
+    }
+
+    updateVerticalPosition() {
+        const config = OBSTACLE_CONFIG.ANIMATIONS.BEE.verticalMovement;
+        const screenHeight = this.scene.cameras.main.height;
+        
+        // Calculate min and max Y positions in pixels
+        const minY = screenHeight * config.minY;
+        const maxY = screenHeight * config.maxY;
+        const amplitude = (maxY - minY) / 2;
+        const centerY = minY + amplitude;
+        
+        // Calculate new Y position using sine wave
+        const elapsedTime = this.scene.time.now - this.startTime;
+        const newY = centerY + Math.sin(elapsedTime * this.verticalSpeed) * amplitude;
+        
+        // Update sprite position
+        this.sprite.setY(newY);
+        
+        if (this.debug) {
+            console.log(`[Obstacle] Bee Y position updated:`, { 
+                newY, 
+                minY, 
+                maxY 
+            });
         }
     }
 

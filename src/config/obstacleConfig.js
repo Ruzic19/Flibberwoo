@@ -3,7 +3,8 @@ export const OBSTACLE_CONFIG = {
     TYPES: {
         SMALL: 'spikes',
         MEDIUM: 'box',
-        LARGE: 'rock-head'
+        LARGE: 'rock-head',
+        BEE: 'bee'
     },
     SPAWN: {
         MIN_DISTANCE: 150,
@@ -26,7 +27,8 @@ export const OBSTACLE_CONFIG = {
         Y_POSITION: {
             SMALL: 0.93,
             MEDIUM: 0.93,
-            LARGE: 0.9
+            LARGE: 0.9,
+            BEE: 0.85    // Bee spawns higher in the air
         }
     },
     DIFFICULTY: {
@@ -40,6 +42,25 @@ export const OBSTACLE_CONFIG = {
     SCALE: {
         SMALL: 2,
         MEDIUM: 2,
-        LARGE: 2
+        LARGE: 2,
+        BEE: 0.75
+    },
+    ANIMATIONS: {
+        BEE: {
+            frameWidth: 64,   // Adjust based on your sprite sheet
+            frameHeight: 64,  // Adjust based on your sprite sheet
+            frameRate: 10,
+            frames: 4,        // Number of frames in the bee animation
+            // Add vertical movement configuration
+            verticalMovement: {
+                minY: 0.7,    // Minimum Y position ratio
+                maxY: 0.85,   // Maximum Y position ratio
+                speed: 0.002, // Speed of vertical movement (adjust as needed)
+                speed: {
+                    min: 0.004,  // Minimum speed of vertical movement
+                    max: 0.007   // Maximum speed of vertical movement
+                }
+            }
+        }
     }
 };

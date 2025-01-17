@@ -33,17 +33,17 @@ export class PlayerHitbox {
             case 'crouch':
                 return {
                     width: width * 0.5,
-                    height: height * 0.4,
-                    offsetX: width * 0.3,
-                    offsetY: height * 0.55
+                    height: height * 0.33,
+                    offsetX: width * 0.33,
+                    offsetY: height * 0.62
                 };
                 
             case 'jump':
                 return {
-                    width: width * 0.5,
-                    height: height * 0.6,
-                    offsetX: width * 0.25,
-                    offsetY: height * 0.2
+                    width: width * 0.35,
+                    height: height * 0.55,
+                    offsetX: width * 0.35,
+                    offsetY: height * 0.3
                 };
                 
             default: // 'run'

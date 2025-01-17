@@ -50,6 +50,13 @@ export class ObstacleHitbox {
                     offsetXFactor: 0.1,
                     offsetYFactor: 0.12
                 };
+            case OBSTACLE_CONFIG.TYPES.BEE:
+                return {
+                    width: 0.4,    // Adjust these values based on the bee sprite
+                    height: 0.4,
+                    offsetXFactor: 0.75,
+                    offsetYFactor: 0.75
+                };
             default:
                 return {
                     width: 0.1,
