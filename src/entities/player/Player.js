@@ -19,7 +19,6 @@ export default class Player {
         // Control state flags
         this.isJumping = false;
         this.isCrouching = false;
-        this.crouchTimer = null;
         this.canJump = true;
         this.jumpKeyPressed = false;
 
@@ -42,9 +41,8 @@ export default class Player {
         if (!keyboard) return;
 
         keyboard.on('keydown-W', () => {
-            // Check both isCrouching and crouchTimer to prevent jump during crouch animation
-            if (!this.jumpKeyPressed && this.canJump && !this.isJumping && 
-                !this.isCrouching && !this.crouchTimer) {
+            // Remove crouching checks - only check if we can jump
+            if (!this.jumpKeyPressed && this.canJump && !this.isJumping) {
                 this.jumpKeyPressed = true;
                 this.startJump();
             }
@@ -56,9 +54,16 @@ export default class Player {
         });
 
         keyboard.on('keydown-S', () => {
-            // Only start a new crouch if we're not already crouching and not jumping
-            if (!this.isCrouching && !this.isJumping && !this.crouchTimer) {
+            // Only check if we're not already crouching
+            if (!this.isCrouching) {
                 this.startCrouch();
+            }
+        });
+
+        keyboard.on('keyup-S', () => {
+            // Add direct crouch release on key up
+            if (this.isCrouching) {
+                this.endCrouch();
             }
         });
     }
@@ -69,6 +74,8 @@ export default class Player {
         this.isJumping = true;
         this.canJump = false;
         this.physics.startJump();
+        
+        // Play jump animation even if crouching
         this.sprite.playAnimation(ANIMATIONS.JUMP);
     }
 
@@ -79,28 +86,21 @@ export default class Player {
     }
 
     startCrouch() {
-        // If already crouching or a crouch timer exists, ignore the request
-        if (this.isCrouching || this.crouchTimer) return;
+        if (this.isCrouching) return;
         
         this.isCrouching = true;
         this.sprite.playAnimation(ANIMATIONS.CROUCH);
-
-        // Set timer for automatic crouch end after 0.7 seconds
-        this.crouchTimer = this.scene.time.delayedCall(700, () => {
-            this.endCrouch();
-        });
     }
 
     endCrouch() {
         if (!this.isCrouching) return;
         
         this.isCrouching = false;
-        if (this.crouchTimer) {
-            this.crouchTimer.remove();
-            this.crouchTimer = null;
-        }
         
-        if (!this.isJumping) {
+        // Play the appropriate animation based on current state
+        if (this.isJumping) {
+            this.sprite.playAnimation(ANIMATIONS.JUMP);
+        } else {
             this.sprite.playAnimation(ANIMATIONS.RUN);
         }
     }
@@ -126,19 +126,25 @@ export default class Player {
             });
         }
 
-        if (!this.isCrouching) {
+        // Play appropriate animation based on current state
+        if (this.isCrouching) {
+            this.sprite.playAnimation(ANIMATIONS.CROUCH);
+        } else {
             this.sprite.playAnimation(ANIMATIONS.RUN);
         }
     }
 
     onJumpAnimationComplete() {
-        if (!this.isCrouching) {
+        if (this.isCrouching) {
+            this.sprite.playAnimation(ANIMATIONS.CROUCH);
+        } else {
             this.sprite.playAnimation(ANIMATIONS.RUN);
         }
     }
 
     onCrouchAnimationComplete() {
         // Handle crouch animation completion if needed
+        // Now empty as we're handling state changes directly
     }
 
     update() {
