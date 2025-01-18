@@ -49,9 +49,9 @@ export class PlayerHitbox {
             default: // 'run'
                 return {
                     width: width * 0.35,
-                    height: height * 0.55,
-                    offsetX: width * 0.33,
-                    offsetY: height * 0.36
+                    height: height * 0.53,
+                    offsetX: width * 0.36,
+                    offsetY: height * 0.38
                 };
         }
     }
