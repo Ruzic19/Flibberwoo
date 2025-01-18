@@ -7,7 +7,7 @@ export const OBSTACLE_CONFIG = {
         BEE: 'bee'
     },
     SPAWN: {
-        MIN_DISTANCE: 150,
+        MIN_DISTANCE: 250,
         MAX_DISTANCE: 750,
         INITIAL_DELAY: 2000,
         BASE_SPEED: 180,     // Adjusted to match background movement
@@ -17,12 +17,12 @@ export const OBSTACLE_CONFIG = {
             MAX: 4           
         },
         GROUP_SPACING: {
-            MIN: 250,
-            MAX: 300
+            MIN: 375,
+            MAX: 500
         },
         GAP_SPACING: {
-            MIN: 600,
-            MAX: 750
+            MIN: 500,
+            MAX: 650
         },
         Y_POSITION: {
             SMALL: 0.93,
