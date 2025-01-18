@@ -53,12 +53,11 @@ export const OBSTACLE_CONFIG = {
             frames: 4,        // Number of frames in the bee animation
             // Add vertical movement configuration
             verticalMovement: {
-                minY: 0.7,    // Minimum Y position ratio
+                minY: 0.55,    // Minimum Y position ratio
                 maxY: 0.85,   // Maximum Y position ratio
-                speed: 0.002, // Speed of vertical movement (adjust as needed)
                 speed: {
-                    min: 0.004,  // Minimum speed of vertical movement
-                    max: 0.007   // Maximum speed of vertical movement
+                    min: 0.006,  // Minimum speed of vertical movement
+                    max: 0.009   // Maximum speed of vertical movement
                 }
             }
         }
