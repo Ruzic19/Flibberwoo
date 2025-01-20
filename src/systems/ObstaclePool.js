@@ -1,32 +1,57 @@
+// src/systems/ObstaclePool.js
 import { Obstacle } from '../entities/obstacles/Obstacle';
+import { logger } from '../utils/LogManager';
 
 export class ObstaclePool {
     constructor(scene) {
         this.scene = scene;
         this.pools = {};
-        this.debug = true;
+        this.moduleName = 'ObstaclePool';
+        
+        logger.enableModule(this.moduleName);
+        logger.info(this.moduleName, 'Initializing obstacle pool');
     }
 
     initialize(types, poolSize) {
+        logger.debug(this.moduleName, 'Creating obstacle pools', {
+            types,
+            poolSize
+        });
+
         types.forEach(type => {
             this.pools[type] = Array.from({ length: poolSize }, 
                 () => new Obstacle(this.scene, type)
             );
 
-            if (this.debug) {
-                console.log(`[ObstaclePool] Created pool for type ${type} with size ${poolSize}`);
-            }
+            logger.debug(this.moduleName, 'Created pool', {
+                type,
+                size: poolSize,
+                activeCount: this.pools[type].filter(o => o.isActive()).length
+            });
         });
     }
 
     getInactiveObstacle(type) {
         const pool = this.pools[type];
-        if (!pool) return null;
+        if (!pool) {
+            logger.warn(this.moduleName, 'Pool not found for type', { type });
+            return null;
+        }
         
         const obstacle = pool.find(obstacle => !obstacle.isActive());
         
-        if (this.debug && obstacle) {
-            console.log(`[ObstaclePool] Retrieved inactive obstacle of type ${type}`);
+        if (obstacle) {
+            logger.debug(this.moduleName, 'Retrieved inactive obstacle', {
+                type,
+                poolSize: pool.length,
+                remainingInactive: pool.filter(o => !o.isActive()).length
+            });
+        } else {
+            logger.warn(this.moduleName, 'No inactive obstacles available', {
+                type,
+                poolSize: pool.length,
+                allActive: pool.every(o => o.isActive())
+            });
         }
         
         return obstacle;
@@ -38,20 +63,39 @@ export class ObstaclePool {
             .filter(obstacle => obstacle.isActive())
             .map(obstacle => obstacle.getSprite());
             
-        if (this.debug) {
-            console.log(`[ObstaclePool] Total active obstacles: ${activeObstacles.length}`);
-        }
+        logger.debug(this.moduleName, 'Retrieved active obstacles', {
+            count: activeObstacles.length,
+            byType: Object.entries(this.pools).reduce((acc, [type, pool]) => {
+                acc[type] = pool.filter(o => o.isActive()).length;
+                return acc;
+            }, {})
+        });
         
         return activeObstacles;
     }
 
     updateAll() {
-        Object.values(this.pools)
-            .flat()
-            .forEach(obstacle => {
-                if (obstacle.isActive()) {
-                    obstacle.update();
+        try {
+            Object.entries(this.pools).forEach(([type, obstacles]) => {
+                const activeCount = obstacles.filter(o => o.isActive()).length;
+                if (activeCount > 0) {
+                    logger.debug(this.moduleName, 'Updating obstacles', {
+                        type,
+                        activeCount
+                    });
                 }
+
+                obstacles.forEach(obstacle => {
+                    if (obstacle.isActive()) {
+                        obstacle.update();
+                    }
+                });
             });
+        } catch (error) {
+            logger.error(this.moduleName, 'Error updating obstacles', {
+                error: error.message,
+                stack: error.stack
+            });
+        }
     }
 }

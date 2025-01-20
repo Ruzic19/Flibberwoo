@@ -2,11 +2,16 @@
 import { OBSTACLE_CONFIG } from '../config/obstacleConfig';
 import { ObstaclePool } from './ObstaclePool';
 import { ObstacleSpawner } from './ObstacleSpawner';
+import { logger } from '../utils/LogManager';
 
 export class ObstacleManager {
     constructor(scene) {
         this.scene = scene;
-        this.debug = false;
+        this.moduleName = 'ObstacleManager';
+        
+        // Enable logging for this module
+        logger.enableModule(this.moduleName);
+        logger.debug(this.moduleName, 'Initializing obstacle system');
         
         this.pool = new ObstaclePool(scene);
         this.pool.initialize(
@@ -16,12 +21,17 @@ export class ObstacleManager {
         
         this.spawner = new ObstacleSpawner(scene, this.pool);
         
-        if (this.debug) {
-            console.log('[ObstacleManager] Initializing obstacle system');
-        }
+        logger.info(this.moduleName, 'Obstacle system initialized', {
+            poolSize: OBSTACLE_CONFIG.POOL_SIZE,
+            obstacleTypes: Object.values(OBSTACLE_CONFIG.TYPES)
+        });
     }
 
     updateDifficulty(speedIncrement, distanceDecrement) {
+        const oldSpeed = this.spawner.currentSpeed;
+        const oldMinSpacing = OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN;
+        const oldMaxSpacing = OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX;
+
         this.spawner.updateSpeed(
             this.spawner.currentSpeed + speedIncrement
         );
@@ -35,21 +45,56 @@ export class ObstacleManager {
             200
         );
 
-        if (this.debug) {
-            console.log('[ObstacleManager] Difficulty updated', {
-                newSpeed: this.spawner.currentSpeed,
-                newGroupSpacingMin: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN,
-                newGroupSpacingMax: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX
+        logger.debug(this.moduleName, 'Difficulty updated', {
+            speedChange: {
+                old: oldSpeed,
+                new: this.spawner.currentSpeed,
+                increment: speedIncrement
+            },
+            spacingChange: {
+                min: {
+                    old: oldMinSpacing,
+                    new: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN
+                },
+                max: {
+                    old: oldMaxSpacing,
+                    new: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX
+                },
+                decrement: distanceDecrement
+            }
+        });
+
+        // Log warning if approaching minimum spacing
+        if (OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN <= 150) {
+            logger.warn(this.moduleName, 'Group spacing approaching minimum safe distance', {
+                currentMin: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN
             });
         }
     }
 
     update() {
-        this.pool.updateAll();
-        this.spawner.spawn();
+        try {
+            this.pool.updateAll();
+            this.spawner.spawn();
+        } catch (error) {
+            logger.error(this.moduleName, 'Error during update cycle', {
+                error: error.message,
+                stack: error.stack
+            });
+        }
     }
 
     getActiveObstacles() {
-        return this.pool.getAllActive();
+        const activeObstacles = this.pool.getAllActive();
+        
+        logger.debug(this.moduleName, 'Retrieved active obstacles', {
+            count: activeObstacles.length,
+            positions: activeObstacles.map(obstacle => ({
+                x: obstacle.x,
+                y: obstacle.y
+            }))
+        });
+        
+        return activeObstacles;
     }
 }

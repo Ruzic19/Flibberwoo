@@ -1,66 +1,103 @@
 // src/systems/GameOverHandler.js
+import { logger } from '../utils/LogManager';
+
 export class GameOverHandler {
     constructor(scene) {
         this.scene = scene;
         this.isGameOver = false;
-        this.debug = true;
+        this.moduleName = 'GameOverHandler';
         this.returnToMenuCallback = null;
+
+        logger.enableModule(this.moduleName);
+        logger.info(this.moduleName, 'Initializing game over handler');
     }
 
     handleGameOver() {
-        if (this.isGameOver) return;
-        this.isGameOver = true;
-
-        // Pause the scene's physics and timers
-        this.scene.physics.pause();
-        this.scene.time.paused = true;
-
-        if (this.debug) {
-            console.log('[GameOverHandler] Game over sequence initiated');
+        if (this.isGameOver) {
+            logger.debug(this.moduleName, 'Game over sequence already in progress');
+            return;
         }
 
-        // Get final score before adding game over text
-        const finalScore = this.scene.scoringSystem ? this.scene.scoringSystem.getCurrentScore() : 0;
+        this.isGameOver = true;
+        logger.info(this.moduleName, 'Game over sequence initiated');
 
-        // Create a semi-transparent overlay
-        const overlay = this.scene.add.rectangle(
-            0, 0,
-            this.scene.cameras.main.width,
-            this.scene.cameras.main.height,
-            0x000000, 0.7
-        );
-        overlay.setOrigin(0, 0);
-        overlay.setDepth(100);
+        try {
+            // Pause the scene's physics and timers
+            this.scene.physics.pause();
+            this.scene.time.paused = true;
 
-        // Add "Game Over" text
-        const gameOverText = this.scene.add.text(
-            this.scene.cameras.main.centerX,
-            this.scene.cameras.main.centerY - 80,
-            'Game Over',
-            {
-                fontSize: '48px',
-                fill: '#fff',
-                fontFamily: 'Arial'
-            }
-        );
-        gameOverText.setOrigin(0.5);
-        gameOverText.setDepth(101);
+            // Get final score before adding game over text
+            const finalScore = this.scene.scoringSystem ? 
+                this.scene.scoringSystem.getCurrentScore() : 0;
 
-        // Add final score text
-        const scoreText = this.scene.add.text(
-            this.scene.cameras.main.centerX,
-            this.scene.cameras.main.centerY - 20,
-            `Final Score: ${finalScore}`,
-            {
-                fontSize: '32px',
-                fill: '#fff',
-                fontFamily: 'Arial'
-            }
-        );
-        scoreText.setOrigin(0.5);
-        scoreText.setDepth(101);
+            logger.info(this.moduleName, 'Final score recorded', { finalScore });
 
-        // Add "Return to Menu" text that acts as a button
+            // Create overlay and UI elements
+            this.createGameOverUI(finalScore);
+        } catch (error) {
+            logger.error(this.moduleName, 'Error during game over sequence', {
+                error: error.message,
+                stack: error.stack
+            });
+        }
+    }
+
+    createGameOverUI(finalScore) {
+        try {
+            // Create a semi-transparent overlay
+            const overlay = this.scene.add.rectangle(
+                0, 0,
+                this.scene.cameras.main.width,
+                this.scene.cameras.main.height,
+                0x000000, 0.7
+            );
+            overlay.setOrigin(0, 0);
+            overlay.setDepth(100);
+
+            const gameOverText = this.scene.add.text(
+                this.scene.cameras.main.centerX,
+                this.scene.cameras.main.centerY - 80,
+                'Game Over',
+                {
+                    fontSize: '48px',
+                    fill: '#fff',
+                    fontFamily: 'Arial'
+                }
+            );
+            gameOverText.setOrigin(0.5);
+            gameOverText.setDepth(101);
+
+            const scoreText = this.scene.add.text(
+                this.scene.cameras.main.centerX,
+                this.scene.cameras.main.centerY - 20,
+                `Final Score: ${finalScore}`,
+                {
+                    fontSize: '32px',
+                    fill: '#fff',
+                    fontFamily: 'Arial'
+                }
+            );
+            scoreText.setOrigin(0.5);
+            scoreText.setDepth(101);
+
+            this.setupMenuButton();
+
+            logger.debug(this.moduleName, 'Game over UI created', {
+                screenSize: {
+                    width: this.scene.cameras.main.width,
+                    height: this.scene.cameras.main.height
+                },
+                elements: ['overlay', 'gameOverText', 'scoreText', 'menuButton']
+            });
+        } catch (error) {
+            logger.error(this.moduleName, 'Error creating game over UI', {
+                error: error.message,
+                stack: error.stack
+            });
+        }
+    }
+
+    setupMenuButton() {
         const menuText = this.scene.add.text(
             this.scene.cameras.main.centerX,
             this.scene.cameras.main.centerY + 50,
@@ -75,20 +112,11 @@ export class GameOverHandler {
         menuText.setDepth(101);
         menuText.setInteractive({ useHandCursor: true });
 
-        // Add hover effect
-        menuText.on('pointerover', () => {
-            menuText.setStyle({ fill: '#ffff00' });
-        });
+        menuText.on('pointerover', () => menuText.setStyle({ fill: '#ffff00' }));
+        menuText.on('pointerout', () => menuText.setStyle({ fill: '#ffffff' }));
 
-        menuText.on('pointerout', () => {
-            menuText.setStyle({ fill: '#ffffff' });
-        });
-
-        // Handle click/tap
         this.returnToMenuCallback = () => {
-            if (this.debug) {
-                console.log('[GameOverHandler] Returning to menu');
-            }
+            logger.info(this.moduleName, 'Returning to menu');
             this.isGameOver = false;
             
             // Remove event listeners
@@ -99,15 +127,15 @@ export class GameOverHandler {
             this.scene.physics.resume();
             this.scene.time.paused = false;
             
-            // Start menu scene and then stop current scene
+            // Start menu scene and stop current scene
             this.scene.scene.start('GameMenu');
             this.scene.scene.stop('GameScene');
         };
 
         menuText.on('pointerdown', this.returnToMenuCallback);
-
-        // Add keyboard handler for quick restart
         this.scene.input.keyboard.once('keydown-SPACE', this.returnToMenuCallback);
+        
+        logger.debug(this.moduleName, 'Menu button setup complete');
     }
 
     reset() {
@@ -116,5 +144,6 @@ export class GameOverHandler {
             this.scene.input.keyboard.off('keydown-SPACE', this.returnToMenuCallback);
             this.returnToMenuCallback = null;
         }
+        logger.info(this.moduleName, 'Game over handler reset');
     }
 }

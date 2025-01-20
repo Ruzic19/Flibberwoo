@@ -1,5 +1,6 @@
 // src/systems/ParallaxBackground.js
 import { GAME_CONFIG } from '../config/gameConfig';
+import { logger } from '../utils/LogManager';
 
 export default class ParallaxBackground {
     constructor(scene, layerInfo) {
@@ -7,7 +8,11 @@ export default class ParallaxBackground {
         this.layers = [];
         this.lastUpdateTime = performance.now();
         this.baseSpeed = GAME_CONFIG.SCROLL_SPEED.BASE;
-        console.log('[ParallaxBackground] Starting layer creation');
+        this.moduleName = 'ParallaxBackground';
+        this.debug = true; // Debug flag
+        this.lastResetLog = 0; // For rate limiting logs
+        
+        logger.enableModule(this.moduleName);
         
         // Calculate and store layer1's speed
         const layer1Index = 1; // layer1 is the second layer
@@ -18,10 +23,19 @@ export default class ParallaxBackground {
 
     createLayers(layerInfo) {
         const scale = this.scene.cameras.main.width / GAME_CONFIG.ORIGINAL_WIDTH;
-        console.log('[ParallaxBackground] Scale:', scale);
+        
+        if (this.debug) {
+            logger.debug(this.moduleName, 'Calculating scale', { scale });
+        }
 
         [...layerInfo].reverse().forEach((layerData, index) => {
-            console.log(`[ParallaxBackground] Creating layer: ${layerData.key} at depth ${index}`);
+            if (this.debug) {
+                logger.debug(this.moduleName, 'Processing layer', {
+                    key: layerData.key,
+                    depth: index
+                });
+            }
+
             if (this.scene.textures.exists(layerData.key)) {
                 try {
                     // Create two sprites for each layer with a slight overlap
@@ -43,10 +57,27 @@ export default class ParallaxBackground {
                         sprite.scrollX = 0;
                         
                         this.layers.push(sprite);
+
+                        if (this.debug) {
+                            logger.debug(this.moduleName, 'Created layer sprite', {
+                                layerKey: layerData.key,
+                                instance: i,
+                                position: { x, y },
+                                speed,
+                                depth: index
+                            });
+                        }
                     }
                 } catch (error) {
-                    console.error(`[ParallaxBackground] Error creating ${layerData.key}:`, error);
+                    logger.error(this.moduleName, `Error creating layer: ${layerData.key}`, {
+                        error: error.message,
+                        stack: error.stack
+                    });
                 }
+            } else {
+                logger.warn(this.moduleName, 'Texture not found', {
+                    key: layerData.key
+                });
             }
         });
     }
@@ -80,13 +111,41 @@ export default class ParallaxBackground {
                 // Ensure precise positioning when resetting
                 sprite1.x = Math.floor(sprite2.x + width - 1); // Subtract 1 for overlap
                 sprite1.startX = sprite1.x;
+
+                this.logLayerReset(i, 1, sprite1);
             }
             if (sprite2.x <= -width) {
                 sprite2.scrollX = 0;
                 // Ensure precise positioning when resetting
                 sprite2.x = Math.floor(sprite1.x + width - 1); // Subtract 1 for overlap
                 sprite2.startX = sprite2.x;
+
+                this.logLayerReset(i, 2, sprite2);
             }
         }
+    }
+
+    logLayerReset(layerIndex, spriteNumber, sprite) {
+        if (!this.debug) return;
+
+        const currentTime = Date.now();
+        if (currentTime - this.lastResetLog > 1000) {  // Only log once per second
+            logger.debug(this.moduleName, 'Layer reset', {
+                layerIndex: Math.floor(layerIndex/2),
+                sprite: spriteNumber,
+                layerKey: sprite.texture.key,
+                speed: sprite.scrollSpeed,
+                position: {
+                    x: sprite.x,
+                    startX: sprite.startX
+                }
+            });
+            this.lastResetLog = currentTime;
+        }
+    }
+
+    setDebug(enabled) {
+        this.debug = enabled;
+        logger.debug(this.moduleName, `Debug mode ${enabled ? 'enabled' : 'disabled'}`);
     }
 }

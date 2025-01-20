@@ -1,15 +1,21 @@
 // src/scenes/game/GameSceneCollision.js
 import { GameOverHandler } from '../../systems/GameOverHandler';
+import { logger } from '../../utils/LogManager';
+import { isDebugEnabled } from '../../config/debugConfig';
 
 export class GameSceneCollision {
     constructor(scene) {
         this.scene = scene;
-        this.debug = true;
-        this.gameOverHandler = new GameOverHandler(scene);
-        this.checkingCollisions = false;
+        this.moduleName = 'GameSceneCollision';
         this.debugGraphics = null;
         this.player = null;
         this.obstacleManager = null;
+        this.gameOverHandler = new GameOverHandler(scene);
+        this.checkingCollisions = false;
+
+        logger.enableModule(this.moduleName);
+        logger.info(this.moduleName, 'Initializing obstacle pool');
+        
         // Added new property to control which elements show debug visuals
         this.debugElements = {
             player: false,
@@ -24,13 +30,20 @@ export class GameSceneCollision {
     }
 
     setupCollision(player, obstacleManager) {
-        this.debugLog('Setting up collision detection');
+        logger.debug(this.moduleName, 'Setting up collision detection');
         this.player = player;
         this.obstacleManager = obstacleManager;
         this.checkingCollisions = true;
 
-        // Enable debug rendering of physics bodies
-        if (this.debug) {
+        // Setup debug graphics if needed
+        this.setupDebugGraphics();
+    }
+
+    setupDebugGraphics() {
+        // Clear any existing debug graphics first
+        this.clearDebugGraphics();
+
+        if (isDebugEnabled('GameSceneCollision')) {
             this.debugGraphics = this.scene.add.graphics();
             this.debugGraphics.setDepth(1000);
             
@@ -41,7 +54,7 @@ export class GameSceneCollision {
                 this.debugGraphics.clear();
                 this.debugGraphics.lineStyle(1, 0xff0000);
                 
-                // Draw player hitbox if it exists
+                // Draw player hitbox if it exists and debugging is enabled
                 const playerSprite = this.player.sprite.sprite;
                 if (this.debugElements.player && playerSprite && playerSprite.body) {
                     this.debugGraphics.strokeRect(
@@ -53,7 +66,6 @@ export class GameSceneCollision {
                 }
                 
                 // Draw obstacle hitboxes
-                // Added condition to check if obstacle debug should be shown
                 if (this.debugElements.obstacles) {
                     const obstacles = this.obstacleManager.getActiveObstacles();
                     if (obstacles) {
@@ -167,14 +179,19 @@ export class GameSceneCollision {
         this.gameOverHandler.handleGameOver();
     }
 
-    cleanup() {
-        this.debugLog('Cleaning up collision system');
-        
-        // Remove debug graphics
+    clearDebugGraphics() {
         if (this.debugGraphics) {
+            this.debugGraphics.clear();
             this.debugGraphics.destroy();
             this.debugGraphics = null;
         }
+    }
+
+    cleanup() {
+        logger.debug(this.moduleName, 'Cleaning up collision system');
+        
+        // Clear debug graphics
+        this.clearDebugGraphics();
 
         // Remove event listeners
         if (this.updateDebugGraphics) {
@@ -191,5 +208,7 @@ export class GameSceneCollision {
     reset() {
         this.gameOverHandler.reset();
         this.checkingCollisions = true;
+        // Refresh debug graphics setup
+        this.setupDebugGraphics();
     }
 }
