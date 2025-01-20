@@ -47,17 +47,18 @@ export const OBSTACLE_CONFIG = {
     },
     ANIMATIONS: {
         BEE: {
-            frameWidth: 64,   // Adjust based on your sprite sheet
-            frameHeight: 64,  // Adjust based on your sprite sheet
+            key: 'bee-fly',
+            frameWidth: 64,
+            frameHeight: 64,
             frameRate: 10,
-            frames: 4,        // Number of frames in the bee animation
-            // Add vertical movement configuration
+            frames: 4,
+            repeat: -1,
             verticalMovement: {
-                minY: 0.55,    // Minimum Y position ratio
-                maxY: 0.85,   // Maximum Y position ratio
+                minY: 0.55,
+                maxY: 0.85,
                 speed: {
-                    min: 0.006,  // Minimum speed of vertical movement
-                    max: 0.009   // Maximum speed of vertical movement
+                    min: 0.006,
+                    max: 0.009
                 }
             }
         }
