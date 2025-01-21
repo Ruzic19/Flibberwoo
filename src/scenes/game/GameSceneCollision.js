@@ -14,7 +14,7 @@ export class GameSceneCollision {
         this.checkingCollisions = false;
 
         logger.enableModule(this.moduleName);
-        logger.info(this.moduleName, 'Initializing obstacle pool');
+        logger.info(this.moduleName, 'Initializing collision system');
         
         // Added new property to control which elements show debug visuals
         this.debugElements = {
@@ -24,8 +24,8 @@ export class GameSceneCollision {
     }
 
     debugLog(message, data = null) {
-        if (this.debug) {
-            console.log(`[GameSceneCollision] ${message}`, data || '');
+        if (isDebugEnabled(this.moduleName)) {
+            logger.debug(this.moduleName, message, data);
         }
     }
 
@@ -35,7 +35,7 @@ export class GameSceneCollision {
         this.obstacleManager = obstacleManager;
         this.checkingCollisions = true;
 
-        // Setup debug graphics if needed
+        // Setup debug graphics
         this.setupDebugGraphics();
     }
 
@@ -43,48 +43,54 @@ export class GameSceneCollision {
         // Clear any existing debug graphics first
         this.clearDebugGraphics();
 
-        if (isDebugEnabled('GameSceneCollision')) {
-            this.debugGraphics = this.scene.add.graphics();
-            this.debugGraphics.setDepth(1000);
+        // Always create debug graphics but only show when debug is enabled
+        this.debugGraphics = this.scene.add.graphics();
+        this.debugGraphics.setDepth(1000);
+        
+        // Store update event callback so we can remove it later
+        this.updateDebugGraphics = () => {
+            if (!this.debugGraphics || !this.player || !this.obstacleManager) return;
             
-            // Store update event callback so we can remove it later
-            this.updateDebugGraphics = () => {
-                if (!this.debugGraphics || !this.player || !this.obstacleManager) return;
-                
-                this.debugGraphics.clear();
-                this.debugGraphics.lineStyle(1, 0xff0000);
-                
-                // Draw player hitbox if it exists and debugging is enabled
-                const playerSprite = this.player.sprite.sprite;
-                if (this.debugElements.player && playerSprite && playerSprite.body) {
-                    this.debugGraphics.strokeRect(
-                        playerSprite.body.x, 
-                        playerSprite.body.y, 
-                        playerSprite.body.width, 
-                        playerSprite.body.height
-                    );
-                }
-                
-                // Draw obstacle hitboxes
-                if (this.debugElements.obstacles) {
-                    const obstacles = this.obstacleManager.getActiveObstacles();
-                    if (obstacles) {
-                        obstacles.forEach(obstacle => {
-                            if (obstacle.body && obstacle.active) {
-                                this.debugGraphics.strokeRect(
-                                    obstacle.body.x,
-                                    obstacle.body.y,
-                                    obstacle.body.width,
-                                    obstacle.body.height
-                                );
-                            }
-                        });
-                    }
-                }
-            };
+            // Clear previous frame's graphics
+            this.debugGraphics.clear();
             
-            this.scene.events.on('update', this.updateDebugGraphics);
-        }
+            // Only draw if debug is enabled
+            if (!isDebugEnabled('GameSceneCollision')) {
+                return;
+            }
+            
+            this.debugGraphics.lineStyle(1, 0xff0000);
+            
+            // Draw player hitbox if it exists and debugging is enabled
+            const playerSprite = this.player.sprite.sprite;
+            if (this.debugElements.player && playerSprite && playerSprite.body) {
+                this.debugGraphics.strokeRect(
+                    playerSprite.body.x, 
+                    playerSprite.body.y, 
+                    playerSprite.body.width, 
+                    playerSprite.body.height
+                );
+            }
+            
+            // Draw obstacle hitboxes
+            if (this.debugElements.obstacles) {
+                const obstacles = this.obstacleManager.getActiveObstacles();
+                if (obstacles) {
+                    obstacles.forEach(obstacle => {
+                        if (obstacle.body && obstacle.active) {
+                            this.debugGraphics.strokeRect(
+                                obstacle.body.x,
+                                obstacle.body.y,
+                                obstacle.body.width,
+                                obstacle.body.height
+                            );
+                        }
+                    });
+                }
+            }
+        };
+        
+        this.scene.events.on('update', this.updateDebugGraphics);
     }
 
     update() {
@@ -127,12 +133,10 @@ export class GameSceneCollision {
                   playerBounds.bottom < obstacleBounds.top || 
                   playerBounds.top > obstacleBounds.bottom)) {
                 
-                if (this.debug) {
-                    console.log('[GameSceneCollision] Collision detected between:', {
-                        player: playerBounds,
-                        obstacle: obstacleBounds
-                    });
-                }
+                this.debugLog('Collision detected between:', {
+                    player: playerBounds,
+                    obstacle: obstacleBounds
+                });
                 
                 collisionDetected = true;
             }
@@ -185,6 +189,11 @@ export class GameSceneCollision {
             this.debugGraphics.destroy();
             this.debugGraphics = null;
         }
+
+        if (this.updateDebugGraphics) {
+            this.scene.events.off('update', this.updateDebugGraphics);
+            this.updateDebugGraphics = null;
+        }
     }
 
     cleanup() {
@@ -192,12 +201,6 @@ export class GameSceneCollision {
         
         // Clear debug graphics
         this.clearDebugGraphics();
-
-        // Remove event listeners
-        if (this.updateDebugGraphics) {
-            this.scene.events.off('update', this.updateDebugGraphics);
-            this.updateDebugGraphics = null;
-        }
 
         // Clear references
         this.player = null;
