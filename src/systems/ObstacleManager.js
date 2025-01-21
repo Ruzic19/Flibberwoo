@@ -3,14 +3,15 @@ import { OBSTACLE_CONFIG } from '../config/obstacleConfig';
 import { ObstaclePool } from './ObstaclePool';
 import { ObstacleSpawner } from './ObstacleSpawner';
 import { logger } from '../utils/LogManager';
+import { debugOverlay } from '../debug/DebugOverlay';
 
 export class ObstacleManager {
     constructor(scene) {
         this.scene = scene;
         this.moduleName = 'ObstacleManager';
         
-        // Enable logging for this module
-        logger.enableModule(this.moduleName);
+        // Enable debug for this module through DebugOverlay
+        debugOverlay.setModuleDebug(this.moduleName, true);
         logger.debug(this.moduleName, 'Initializing obstacle system');
         
         this.pool = new ObstaclePool(scene);
@@ -87,13 +88,15 @@ export class ObstacleManager {
     getActiveObstacles() {
         const activeObstacles = this.pool.getAllActive();
         
-        logger.debug(this.moduleName, 'Retrieved active obstacles', {
-            count: activeObstacles.length,
-            positions: activeObstacles.map(obstacle => ({
-                x: obstacle.x,
-                y: obstacle.y
-            }))
-        });
+        if (debugOverlay.isDebugEnabled(this.moduleName)) {
+            logger.debug(this.moduleName, 'Retrieved active obstacles', {
+                count: activeObstacles.length,
+                positions: activeObstacles.map(obstacle => ({
+                    x: obstacle.x,
+                    y: obstacle.y
+                }))
+            });
+        }
         
         return activeObstacles;
     }

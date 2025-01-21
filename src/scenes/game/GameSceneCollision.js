@@ -1,7 +1,7 @@
 // src/scenes/game/GameSceneCollision.js
 import { GameOverHandler } from '../../systems/GameOverHandler';
 import { logger } from '../../utils/LogManager';
-import { isDebugEnabled } from '../../config/debugConfig';
+import { debugOverlay } from '../../debug/DebugOverlay';
 
 export class GameSceneCollision {
     constructor(scene) {
@@ -13,7 +13,8 @@ export class GameSceneCollision {
         this.gameOverHandler = new GameOverHandler(scene);
         this.checkingCollisions = false;
 
-        logger.enableModule(this.moduleName);
+        // Enable debug for this module through DebugOverlay
+        debugOverlay.setModuleDebug(this.moduleName, true);
         logger.info(this.moduleName, 'Initializing collision system');
         
         // Added new property to control which elements show debug visuals
@@ -24,7 +25,7 @@ export class GameSceneCollision {
     }
 
     debugLog(message, data = null) {
-        if (isDebugEnabled(this.moduleName)) {
+        if (debugOverlay.isDebugEnabled(this.moduleName)) {
             logger.debug(this.moduleName, message, data);
         }
     }
@@ -55,7 +56,7 @@ export class GameSceneCollision {
             this.debugGraphics.clear();
             
             // Only draw if debug is enabled
-            if (!isDebugEnabled('GameSceneCollision')) {
+            if (!debugOverlay.isDebugEnabled(this.moduleName)) {
                 return;
             }
             

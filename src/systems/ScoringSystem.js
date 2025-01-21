@@ -1,5 +1,6 @@
 // src/systems/ScoringSystem.js
 import { logger } from '../utils/LogManager';
+import { debugOverlay } from '../debug/DebugOverlay';
 
 export class ScoringSystem {
     constructor(scene) {
@@ -9,8 +10,9 @@ export class ScoringSystem {
         this.isFrozen = false;
         this.distanceMultiplier = 0.1; // Points per pixel traveled
         
-        // Enable logging for this module
-        logger.enableModule(this.moduleName);
+        // Enable debug for this module through DebugOverlay
+        debugOverlay.setModuleDebug(this.moduleName, true);
+        
         logger.info(this.moduleName, 'Initializing scoring system', {
             initialScore: this.score,
             multiplier: this.distanceMultiplier
@@ -37,16 +39,18 @@ export class ScoringSystem {
                 }
             ).setOrigin(0.5).setScrollFactor(0).setDepth(1000);
 
-            logger.debug(this.moduleName, 'Score UI initialized', {
-                position: {
-                    x: this.scene.cameras.main.width / 2,
-                    y: 40
-                },
-                style: {
-                    fontSize: '32px',
-                    depth: 1000
-                }
-            });
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Score UI initialized', {
+                    position: {
+                        x: this.scene.cameras.main.width / 2,
+                        y: 40
+                    },
+                    style: {
+                        fontSize: '32px',
+                        depth: 1000
+                    }
+                });
+            }
         } catch (error) {
             logger.error(this.moduleName, 'Failed to setup score UI', {
                 error: error.message,
@@ -57,7 +61,9 @@ export class ScoringSystem {
     
     update() {
         if (this.isFrozen) {
-            logger.debug(this.moduleName, 'Score update skipped - system frozen');
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Score update skipped - system frozen');
+            }
             return;
         }
         
@@ -67,12 +73,14 @@ export class ScoringSystem {
             const previousScore = this.score;
             this.score += pixelsPerFrame * this.distanceMultiplier;
             
-            logger.debug(this.moduleName, 'Score updated', {
-                pixelsTraveled: pixelsPerFrame,
-                scoreIncrement: pixelsPerFrame * this.distanceMultiplier,
-                previousScore,
-                newScore: this.score
-            });
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Score updated', {
+                    pixelsTraveled: pixelsPerFrame,
+                    scoreIncrement: pixelsPerFrame * this.distanceMultiplier,
+                    previousScore,
+                    newScore: this.score
+                });
+            }
 
             this.updateUI();
         } else {

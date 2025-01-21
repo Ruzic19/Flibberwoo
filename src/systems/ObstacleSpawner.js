@@ -1,6 +1,7 @@
 // src/systems/ObstacleSpawner.js
 import { OBSTACLE_CONFIG } from '../config/obstacleConfig';
 import { logger } from '../utils/LogManager';
+import { debugOverlay } from '../debug/DebugOverlay';
 
 export class ObstacleSpawner {
     constructor(scene, obstaclePool) {
@@ -14,7 +15,9 @@ export class ObstacleSpawner {
         this.groupMode = false;
         this.remainingGroupSize = 0;
 
-        logger.enableModule(this.moduleName);
+        // Enable debug for this module through DebugOverlay
+        debugOverlay.setModuleDebug(this.moduleName, true);
+        
         logger.info(this.moduleName, 'Initializing obstacle spawner', {
             initialSpeed: this.currentSpeed,
             initialDelay: OBSTACLE_CONFIG.SPAWN.INITIAL_DELAY
@@ -25,11 +28,13 @@ export class ObstacleSpawner {
         const oldSpeed = this.currentSpeed;
         this.currentSpeed = Math.min(newSpeed, OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED);
         
-        logger.debug(this.moduleName, 'Speed updated', {
-            oldSpeed,
-            newSpeed: this.currentSpeed,
-            wasLimited: newSpeed > OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED
-        });
+        if (debugOverlay.isDebugEnabled(this.moduleName)) {
+            logger.debug(this.moduleName, 'Speed updated', {
+                oldSpeed,
+                newSpeed: this.currentSpeed,
+                wasLimited: newSpeed > OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED
+            });
+        }
 
         if (newSpeed > OBSTACLE_CONFIG.DIFFICULTY.MAX_SPEED) {
             logger.warn(this.moduleName, 'Speed capped at maximum limit', {
@@ -53,18 +58,22 @@ export class ObstacleSpawner {
             if (this.remainingGroupSize <= 0) {
                 this.groupMode = false;
                 distance += this.calculateGapDistance();
-                logger.debug(this.moduleName, 'Group completed, adding gap distance');
+                if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                    logger.debug(this.moduleName, 'Group completed, adding gap distance');
+                }
             }
         }
 
         const delay = (distance / this.currentSpeed) * 1000;
-        logger.debug(this.moduleName, 'Spawn timing calculated', { 
-            distance,
-            speed: this.currentSpeed,
-            delay,
-            groupMode: this.groupMode,
-            remainingInGroup: this.remainingGroupSize
-        });
+        if (debugOverlay.isDebugEnabled(this.moduleName)) {
+            logger.debug(this.moduleName, 'Spawn timing calculated', { 
+                distance,
+                speed: this.currentSpeed,
+                delay,
+                groupMode: this.groupMode,
+                remainingInGroup: this.remainingGroupSize
+            });
+        }
 
         return { distance, delay };
     }
@@ -77,13 +86,15 @@ export class ObstacleSpawner {
             OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN
         );
 
-        logger.debug(this.moduleName, 'Starting new obstacle group', { 
-            groupSize: this.remainingGroupSize,
-            groupConfig: {
-                min: OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN,
-                max: OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MAX
-            }
-        });
+        if (debugOverlay.isDebugEnabled(this.moduleName)) {
+            logger.debug(this.moduleName, 'Starting new obstacle group', { 
+                groupSize: this.remainingGroupSize,
+                groupConfig: {
+                    min: OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MIN,
+                    max: OBSTACLE_CONFIG.SPAWN.GROUP_SIZE.MAX
+                }
+            });
+        }
     }
 
     calculateDistance() {
@@ -92,13 +103,15 @@ export class ObstacleSpawner {
                 (OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN) + 
                 OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN;
             
-            logger.debug(this.moduleName, 'Group spacing calculated', {
-                distance,
-                config: {
-                    min: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN,
-                    max: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX
-                }
-            });
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Group spacing calculated', {
+                    distance,
+                    config: {
+                        min: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MIN,
+                        max: OBSTACLE_CONFIG.SPAWN.GROUP_SPACING.MAX
+                    }
+                });
+            }
             return distance;
         }
         return this.calculateGapDistance();
@@ -109,13 +122,15 @@ export class ObstacleSpawner {
             (OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX - OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN) + 
             OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN;
             
-        logger.debug(this.moduleName, 'Gap distance calculated', {
-            distance,
-            config: {
-                min: OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN,
-                max: OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX
-            }
-        });
+        if (debugOverlay.isDebugEnabled(this.moduleName)) {
+            logger.debug(this.moduleName, 'Gap distance calculated', {
+                distance,
+                config: {
+                    min: OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MIN,
+                    max: OBSTACLE_CONFIG.SPAWN.GAP_SPACING.MAX
+                }
+            });
+        }
         return distance;
     }
 
@@ -140,13 +155,15 @@ export class ObstacleSpawner {
             const y = this.scene.cameras.main.height * 
                 OBSTACLE_CONFIG.SPAWN.Y_POSITION[this.getTypeName(randomType)];
             
-            logger.debug(this.moduleName, 'Spawning obstacle', { 
-                type: randomType,
-                position: { x, y },
-                speed: this.currentSpeed,
-                groupMode: this.groupMode,
-                remainingInGroup: this.remainingGroupSize
-            });
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Spawning obstacle', { 
+                    type: randomType,
+                    position: { x, y },
+                    speed: this.currentSpeed,
+                    groupMode: this.groupMode,
+                    remainingInGroup: this.remainingGroupSize
+                });
+            }
             
             obstacle.enable(x, y, this.currentSpeed);
             

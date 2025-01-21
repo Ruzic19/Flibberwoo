@@ -1,5 +1,5 @@
 // src/utils/LogManager.js
-import { DEBUG_CONFIG, isDebugEnabled } from '../config/debugConfig';
+import { debugOverlay } from '../debug/DebugOverlay';
 
 export class LogManager {
     static instance = null;
@@ -9,7 +9,6 @@ export class LogManager {
             return LogManager.instance;
         }
         
-        this.debugModules = new Set();
         this.logHistory = [];
         this.maxHistorySize = 1000;
         
@@ -31,18 +30,9 @@ export class LogManager {
         return LogManager.instance;
     }
 
-    // Enable/disable debugging for specific modules
-    enableModule(moduleName) {
-        this.debugModules.add(moduleName);
-    }
-
-    disableModule(moduleName) {
-        this.debugModules.delete(moduleName);
-    }
-
-    // Check if debugging is enabled for a module
+    // Check if debugging is enabled for a module through DebugOverlay
     isDebugEnabled(moduleName) {
-        return isDebugEnabled(moduleName);
+        return debugOverlay.isDebugEnabled(moduleName);
     }
 
     // Main logging method
@@ -70,18 +60,22 @@ export class LogManager {
         // Format the console output
         const formattedMessage = `[${timestamp}] [${moduleName}] ${message}`;
         
+        // Add visual indicator for debug messages
+        const debugIndicator = level === this.LOG_LEVELS.DEBUG ? '[DEBUG] ' : '';
+        const finalMessage = debugIndicator + formattedMessage;
+        
         switch (level) {
             case this.LOG_LEVELS.ERROR:
-                console.error(formattedMessage, data || '');
+                console.error(finalMessage, data || '');
                 break;
             case this.LOG_LEVELS.WARN:
-                console.warn(formattedMessage, data || '');
+                console.warn(finalMessage, data || '');
                 break;
             case this.LOG_LEVELS.INFO:
-                console.info(formattedMessage, data || '');
+                console.info(finalMessage, data || '');
                 break;
             default:
-                console.log(formattedMessage, data || '');
+                console.log(finalMessage, data || '');
         }
     }
 

@@ -2,25 +2,24 @@
 import Phaser from "phaser";
 import GameMenu from "./scenes/GameMenu";
 import GameScene from "./scenes/game/GameScene";
-import { setGlobalDebug, setModuleDebug, DEBUG_CONFIG } from './config/debugConfig';
+import { debugOverlay } from './debug/DebugOverlay';
 import { logger } from './utils/LogManager';
-import { DebugOverlay } from './debug/DebugOverlay';
 
 // Configure debug settings
 if (process.env.NODE_ENV === 'development') {
     // Default debug settings for development
-    setModuleDebug('ParallaxBackground', false);
-    setModuleDebug('ObstacleManager', false);
-    setModuleDebug('ObstaclePool', false);
-    setModuleDebug('ObstacleSpawner', false);
-    setModuleDebug('GameOverHandler', false);
-    setModuleDebug('DifficultyManager', false);
-    setModuleDebug('ScoringSystem', false);
-    setModuleDebug('GameScene', true);
-    setModuleDebug('GameSceneCollision', false);
+    debugOverlay.setModuleDebug('ParallaxBackground', false);
+    debugOverlay.setModuleDebug('ObstacleManager', true);
+    debugOverlay.setModuleDebug('ObstaclePool', true);
+    debugOverlay.setModuleDebug('ObstacleSpawner', true);
+    debugOverlay.setModuleDebug('GameOverHandler', true);
+    debugOverlay.setModuleDebug('DifficultyManager', true);
+    debugOverlay.setModuleDebug('ScoringSystem', true);
+    debugOverlay.setModuleDebug('GameScene', true);
+    debugOverlay.setModuleDebug('GameSceneCollision', true);
 } else {
     // Disable all debugging in production
-    setGlobalDebug(false);
+    debugOverlay.setGlobalDebug(false);
 }
 
 // Game configuration
@@ -46,13 +45,16 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: DEBUG_CONFIG.MODULES.GameScene,
+            debug: debugOverlay.isDebugEnabled('GameScene'),
         }
     }
 };
 
 // Initialize game
 const game = new Phaser.Game(config);
+
+// Initialize debug overlay
+debugOverlay.initialize(game);
 
 // Error handling
 window.onerror = function(msg, src, lineNo, colNo, error) {
@@ -65,7 +67,3 @@ window.onerror = function(msg, src, lineNo, colNo, error) {
     });
     return false;
 };
-
-// Initialize debug overlay
-const debugOverlay = new DebugOverlay(game);
-debugOverlay.initialize();

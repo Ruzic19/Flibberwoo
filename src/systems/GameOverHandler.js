@@ -1,5 +1,6 @@
 // src/systems/GameOverHandler.js
 import { logger } from '../utils/LogManager';
+import { debugOverlay } from '../debug/DebugOverlay';
 
 export class GameOverHandler {
     constructor(scene) {
@@ -8,7 +9,9 @@ export class GameOverHandler {
         this.moduleName = 'GameOverHandler';
         this.returnToMenuCallback = null;
 
-        logger.enableModule(this.moduleName);
+        // Enable debug for this module through DebugOverlay instead of logger
+        debugOverlay.setModuleDebug(this.moduleName, true);
+        
         logger.info(this.moduleName, 'Initializing game over handler');
     }
 

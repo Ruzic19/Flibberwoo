@@ -1,6 +1,7 @@
 // src/systems/DifficultyManager.js
 import { OBSTACLE_CONFIG } from '../config/obstacleConfig';
 import { logger } from '../utils/LogManager';
+import { debugOverlay } from '../debug/DebugOverlay';
 
 export class DifficultyManager {
     constructor(scene, obstacleManager) {
@@ -9,7 +10,9 @@ export class DifficultyManager {
         this.moduleName = 'DifficultyManager';
         this.difficultyLevel = 1;
 
-        logger.enableModule(this.moduleName);
+        // Enable debug for this module through DebugOverlay
+        debugOverlay.setModuleDebug(this.moduleName, true);
+        
         logger.info(this.moduleName, 'Initializing difficulty manager', {
             initialLevel: this.difficultyLevel,
             updateInterval: OBSTACLE_CONFIG.DIFFICULTY.INTERVAL
@@ -27,10 +30,12 @@ export class DifficultyManager {
                 loop: true
             });
 
-            logger.debug(this.moduleName, 'Difficulty timer configured', {
-                delay: OBSTACLE_CONFIG.DIFFICULTY.INTERVAL,
-                isLoop: true
-            });
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Difficulty timer configured', {
+                    delay: OBSTACLE_CONFIG.DIFFICULTY.INTERVAL,
+                    isLoop: true
+                });
+            }
         } catch (error) {
             logger.error(this.moduleName, 'Failed to setup difficulty timer', {
                 error: error.message,
@@ -91,7 +96,9 @@ export class DifficultyManager {
 
         if (this.difficultyTimer) {
             this.difficultyTimer.destroy();
-            logger.debug(this.moduleName, 'Previous difficulty timer destroyed');
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Previous difficulty timer destroyed');
+            }
         }
 
         this.setupDifficultyTimer();

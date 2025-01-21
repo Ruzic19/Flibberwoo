@@ -1,6 +1,7 @@
 // src/systems/ParallaxBackground.js
 import { GAME_CONFIG } from '../config/gameConfig';
 import { logger } from '../utils/LogManager';
+import { debugOverlay } from '../debug/DebugOverlay';
 
 export default class ParallaxBackground {
     constructor(scene, layerInfo) {
@@ -12,7 +13,8 @@ export default class ParallaxBackground {
         this.debug = true; // Debug flag
         this.lastResetLog = 0; // For rate limiting logs
         
-        logger.enableModule(this.moduleName);
+        // Enable debug for this module through DebugOverlay
+        debugOverlay.setModuleDebug(this.moduleName, true);
         
         // Calculate and store layer1's speed
         const layer1Index = 1; // layer1 is the second layer
@@ -126,7 +128,7 @@ export default class ParallaxBackground {
     }
 
     logLayerReset(layerIndex, spriteNumber, sprite) {
-        if (!this.debug) return;
+        if (!debugOverlay.isDebugEnabled(this.moduleName)) return;
 
         const currentTime = Date.now();
         if (currentTime - this.lastResetLog > 1000) {  // Only log once per second
@@ -145,7 +147,7 @@ export default class ParallaxBackground {
     }
 
     setDebug(enabled) {
-        this.debug = enabled;
+        debugOverlay.setModuleDebug(this.moduleName, enabled);
         logger.debug(this.moduleName, `Debug mode ${enabled ? 'enabled' : 'disabled'}`);
     }
 }

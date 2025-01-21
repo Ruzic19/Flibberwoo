@@ -1,42 +1,58 @@
 // src/debug/DebugOverlay.js
-import { DEBUG_CONFIG, setGlobalDebug, setModuleDebug } from '../config/debugConfig';
-import { logger } from '../utils/LogManager';
-
 export class DebugOverlay {
-    constructor(game) {
-        this.game = game;
-        this.panel = null;
+    static instance = null;
+    
+    constructor() {
+        if (DebugOverlay.instance) {
+            return DebugOverlay.instance;
+        }
+        
+        this.debugPanel = null;
         this.moduleToggles = null;
-        this.isPanelVisible = true;
+        this.config = {
+            GLOBAL: false,
+            MODULES: {
+                ParallaxBackground: false,
+                ObstacleManager: false,
+                ObstaclePool: false,
+                ObstacleSpawner: false,
+                GameOverHandler: false,
+                DifficultyManager: false,
+                ScoringSystem: false,
+                Player: false,
+                PlayerSprite: false,
+                PlayerAnimations: false,
+                PlayerControls: false,
+                PlayerHitbox: false,
+                GameScene: false,
+                GameSceneCollision: false
+            }
+        };
+        
+        DebugOverlay.instance = this;
     }
 
-    initialize() {
+    initialize(game) {
         if (process.env.NODE_ENV !== 'development') return;
         
-        this.createPanel();
-        this.createGlobalToggle();
-        this.createModuleToggles();
+        this.game = game;
+        this.createDebugPanel();
         this.setupKeyboardShortcuts();
-        
-        logger.info('DebugOverlay', 'Debug controls initialized');
     }
 
-    createPanel() {
-        this.panel = document.createElement('div');
-        Object.assign(this.panel.style, {
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            padding: '10px',
-            color: 'white',
-            zIndex: '1000',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            borderRadius: '5px'
-        });
-
-        this.panel.innerHTML = `
+    createDebugPanel() {
+        this.debugPanel = document.createElement('div');
+        this.debugPanel.style.position = 'fixed';
+        this.debugPanel.style.top = '10px';
+        this.debugPanel.style.right = '10px';
+        this.debugPanel.style.backgroundColor = 'rgba(0,0,0,0.7)';
+        this.debugPanel.style.padding = '10px';
+        this.debugPanel.style.color = 'white';
+        this.debugPanel.style.zIndex = '1000';
+        this.debugPanel.style.maxHeight = '80vh';
+        this.debugPanel.style.overflowY = 'auto';
+        this.debugPanel.style.borderRadius = '5px';
+        this.debugPanel.innerHTML = `
             <div style="margin-bottom: 10px;">
                 <label style="display: block; margin-bottom: 10px;">
                     <input type="checkbox" id="globalDebug"> Global Debug
@@ -46,31 +62,27 @@ export class DebugOverlay {
             <div id="moduleToggles"></div>
         `;
 
-        document.body.appendChild(this.panel);
-        this.moduleToggles = document.getElementById('moduleToggles');
+        document.body.appendChild(this.debugPanel);
+
+        this.createGlobalToggle();
+        this.createModuleToggles();
+        this.setupPanelToggle();
     }
 
     createGlobalToggle() {
         const globalToggle = document.getElementById('globalDebug');
-        globalToggle.checked = DEBUG_CONFIG.GLOBAL;
+        globalToggle.checked = this.config.GLOBAL;
         globalToggle.addEventListener('change', (e) => {
             const enabled = e.target.checked;
-            setGlobalDebug(enabled);
+            this.setGlobalDebug(enabled);
             this.updateModuleToggles();
-            
-            // Update all active scenes
-            this.game.scene.scenes.forEach(scene => {
-                this.updateSceneDebug(scene, enabled);
-            });
         });
-
-        // Add toggle panel button functionality
-        const togglePanel = document.getElementById('togglePanel');
-        togglePanel.addEventListener('click', () => this.togglePanelVisibility(togglePanel));
     }
 
     createModuleToggles() {
-        Object.keys(DEBUG_CONFIG.MODULES).forEach(moduleName => {
+        this.moduleToggles = document.getElementById('moduleToggles');
+        
+        Object.keys(this.config.MODULES).forEach(moduleName => {
             const label = document.createElement('label');
             label.style.display = 'block';
             label.style.marginBottom = '5px';
@@ -78,76 +90,99 @@ export class DebugOverlay {
             label.innerHTML = `
                 <input type="checkbox" data-module="${moduleName}"> ${moduleName}
             `;
-
             this.moduleToggles.appendChild(label);
-            this.setupModuleToggle(label.querySelector('input'), moduleName);
+
+            const checkbox = label.querySelector('input');
+            checkbox.checked = this.config.MODULES[moduleName];
+            checkbox.addEventListener('change', (e) => {
+                const enabled = e.target.checked;
+                this.setModuleDebug(moduleName, enabled);
+            });
         });
     }
 
-    setupModuleToggle(checkbox, moduleName) {
-        checkbox.checked = DEBUG_CONFIG.MODULES[moduleName];
-        checkbox.addEventListener('change', (e) => {
-            const enabled = e.target.checked;
-            setModuleDebug(moduleName, enabled);
-            
-            // Update physics debug if GameScene toggle changes
-            if (moduleName === 'GameScene') {
-                this.game.scene.scenes.forEach(scene => {
-                    this.updateSceneDebug(scene, enabled);
-                });
-            }
+    setupPanelToggle() {
+        const togglePanel = document.getElementById('togglePanel');
+        let isPanelVisible = true;
 
-            // Handle module-specific debug setup
-            this.game.scene.scenes.forEach(scene => {
-                const moduleInstance = scene[moduleName.toLowerCase()];
-                if (moduleInstance?.setupDebugGraphics) {
-                    moduleInstance.setupDebugGraphics();
-                }
-            });
+        togglePanel.addEventListener('click', () => {
+            isPanelVisible = !isPanelVisible;
+            this.moduleToggles.style.display = isPanelVisible ? 'block' : 'none';
+            togglePanel.textContent = isPanelVisible ? 'Hide Panel' : 'Show Panel';
+            this.debugPanel.style.backgroundColor = isPanelVisible ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.3)';
         });
     }
 
     updateModuleToggles() {
         const checkboxes = this.moduleToggles.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
-            checkbox.checked = DEBUG_CONFIG.GLOBAL || DEBUG_CONFIG.MODULES[checkbox.dataset.module];
+            checkbox.checked = this.config.GLOBAL || this.config.MODULES[checkbox.dataset.module];
         });
-    }
-
-    togglePanelVisibility(toggleButton) {
-        this.isPanelVisible = !this.isPanelVisible;
-        this.moduleToggles.style.display = this.isPanelVisible ? 'block' : 'none';
-        toggleButton.textContent = this.isPanelVisible ? 'Hide Panel' : 'Show Panel';
-        this.panel.style.backgroundColor = this.isPanelVisible ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.3)';
     }
 
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
             if (e.key === '`') {  // backtick key
-                const toggleButton = document.getElementById('togglePanel');
-                if (toggleButton) {
-                    toggleButton.click();
-                }
+                document.getElementById('togglePanel').click();
             }
         });
     }
 
-    updateSceneDebug(scene, enabled) {
-        if (scene.physics?.world) {
-            // Clear existing debug graphics
-            if (scene.physics.world.debugGraphic) {
-                scene.physics.world.debugGraphic.clear();
+    setModuleDebug(moduleName, enabled) {
+        if (this.config.MODULES.hasOwnProperty(moduleName)) {
+            this.config.MODULES[moduleName] = enabled;
+            this.updateDebugGraphics();
+        }
+    }
+
+    setGlobalDebug(enabled) {
+        this.config.GLOBAL = enabled;
+        Object.keys(this.config.MODULES).forEach(module => {
+            this.config.MODULES[module] = enabled;
+        });
+        this.updateDebugGraphics();
+    }
+
+    isDebugEnabled(moduleName) {
+        return this.config.GLOBAL || this.config.MODULES[moduleName];
+    }
+
+    updateDebugGraphics() {
+        if (!this.game) return;
+        
+        this.game.scene.scenes.forEach(scene => {
+            if (scene.physics && scene.physics.world) {
+                this.updateSceneDebug(scene);
             }
-            
-            // Update debug settings
+        });
+    }
+
+    updateSceneDebug(scene) {
+        if (scene.physics && scene.physics.world) {
+            this.clearDebugGraphics(scene);
+            const enabled = this.isDebugEnabled('GameScene');
             scene.physics.world.debugGraphic.visible = enabled;
             scene.physics.world.drawDebug = enabled;
 
-            // Force refresh of debug graphics
             if (enabled) {
                 scene.physics.world.drawDebug = false;
                 scene.physics.world.drawDebug = true;
             }
         }
     }
+
+    clearDebugGraphics(scene) {
+        if (scene.physics.world.debugGraphic) {
+            scene.physics.world.debugGraphic.clear();
+        }
+    }
+
+    static getInstance() {
+        if (!DebugOverlay.instance) {
+            DebugOverlay.instance = new DebugOverlay();
+        }
+        return DebugOverlay.instance;
+    }
 }
+
+export const debugOverlay = DebugOverlay.getInstance();
