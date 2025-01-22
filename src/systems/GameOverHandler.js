@@ -9,7 +9,7 @@ export class GameOverHandler {
         this.moduleName = 'GameOverHandler';
         this.returnToMenuCallback = null;
 
-        // Enable debug for this module through DebugOverlay instead of logger
+        // Enable debug for this module through DebugOverlay
         debugOverlay.setModuleDebug(this.moduleName, true);
         
         logger.info(this.moduleName, 'Initializing game over handler');
@@ -25,9 +25,8 @@ export class GameOverHandler {
         logger.info(this.moduleName, 'Game over sequence initiated');
 
         try {
-            // Pause the scene's physics and timers
-            this.scene.physics.pause();
-            this.scene.time.paused = true;
+            // Stop all game systems
+            this.stopGameSystems();
 
             // Get final score before adding game over text
             const finalScore = this.scene.scoringSystem ? 
@@ -41,6 +40,51 @@ export class GameOverHandler {
             logger.error(this.moduleName, 'Error during game over sequence', {
                 error: error.message,
                 stack: error.stack
+            });
+        }
+    }
+
+    stopGameSystems() {
+        try {
+            // Pause the scene's physics
+            this.scene.physics.pause();
+
+            // Stop background scrolling
+            if (this.scene.background) {
+                this.scene.background.enabled = false;
+            }
+
+            // Stop obstacle updates
+            if (this.scene.obstacleManager) {
+                this.scene.obstacleManager.enabled = false;
+                // Disable all active obstacles
+                const activeObstacles = this.scene.obstacleManager.getActiveObstacles();
+                activeObstacles.forEach(obstacle => {
+                    if (obstacle.body) {
+                        obstacle.body.setVelocity(0, 0);
+                    }
+                });
+            }
+
+            // Stop the difficulty manager
+            if (this.scene.difficultyManager) {
+                this.scene.difficultyManager.enabled = false;
+            }
+
+            // Freeze the scoring system
+            if (this.scene.scoringSystem) {
+                this.scene.scoringSystem.freeze();
+            }
+
+            // Stop player animations
+            if (this.scene.player?.sprite?.sprite) {
+                this.scene.player.sprite.sprite.anims.stop();
+            }
+
+            logger.info(this.moduleName, 'All game systems stopped');
+        } catch (error) {
+            logger.error(this.moduleName, 'Error stopping game systems', {
+                error: error.message
             });
         }
     }
@@ -85,17 +129,10 @@ export class GameOverHandler {
 
             this.setupMenuButton();
 
-            logger.debug(this.moduleName, 'Game over UI created', {
-                screenSize: {
-                    width: this.scene.cameras.main.width,
-                    height: this.scene.cameras.main.height
-                },
-                elements: ['overlay', 'gameOverText', 'scoreText', 'menuButton']
-            });
+            logger.debug(this.moduleName, 'Game over UI created');
         } catch (error) {
             logger.error(this.moduleName, 'Error creating game over UI', {
-                error: error.message,
-                stack: error.stack
+                error: error.message
             });
         }
     }
@@ -126,10 +163,6 @@ export class GameOverHandler {
             menuText.removeAllListeners();
             this.scene.input.keyboard.off('keydown-SPACE', this.returnToMenuCallback);
             
-            // Resume physics and timers before changing scenes
-            this.scene.physics.resume();
-            this.scene.time.paused = false;
-            
             // Start menu scene and stop current scene
             this.scene.scene.start('GameMenu');
             this.scene.scene.stop('GameScene');
@@ -137,8 +170,6 @@ export class GameOverHandler {
 
         menuText.on('pointerdown', this.returnToMenuCallback);
         this.scene.input.keyboard.once('keydown-SPACE', this.returnToMenuCallback);
-        
-        logger.debug(this.moduleName, 'Menu button setup complete');
     }
 
     reset() {

@@ -1,71 +1,215 @@
+// src/scenes/game/GameSceneLoader.js
 import { LAYER_INFO } from '../../config/layerConfig';
 import { OBSTACLE_CONFIG } from '../../config/obstacleConfig';
 import AssetLoader from '../../assets/AssetLoader';
+import { logger } from '../../utils/LogManager';
+import { debugOverlay } from '../../debug/DebugOverlay';
 
 export class GameSceneLoader {
     constructor(scene) {
         this.scene = scene;
-        this.debug = false;
-    }
-
-    debugLog(message, data = null) {
-        if (this.debug) {
-            console.log(`[GameSceneLoader] ${message}`, data || '');
-        }
+        this.moduleName = 'GameSceneLoader';
+        this.assetsLoaded = {
+            background: false,
+            player: false,
+            obstacles: false
+        };
+        
+        // Enable debug for this module through DebugOverlay
+        debugOverlay.setModuleDebug(this.moduleName, true);
+        
+        logger.info(this.moduleName, 'Initializing game scene loader');
     }
 
     loadAssets() {
-        this.debugLog('Starting asset loading');
-        this.scene.load.baseURL = '/';
-        this.scene.load.crossOrigin = 'anonymous';
-        
-        this.loadBackgroundLayers();
-        this.loadPlayerAssets();
-        this.loadObstacleAssets();
+        try {
+            logger.info(this.moduleName, 'Starting asset loading process');
+            
+            this.setupLoadingConfiguration();
+            this.setupLoadingListeners();
+            
+            // Load assets in sequence
+            this.loadBackgroundLayers();
+            this.loadPlayerAssets();
+            this.loadObstacleAssets();
+            
+            logger.info(this.moduleName, 'Asset loading initiated');
+        } catch (error) {
+            logger.error(this.moduleName, 'Error initiating asset loading', {
+                error: error.message,
+                stack: error.stack
+            });
+        }
+    }
+
+    setupLoadingConfiguration() {
+        try {
+            this.scene.load.baseURL = '/';
+            this.scene.load.crossOrigin = 'anonymous';
+            
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Loading configuration set', {
+                    baseURL: this.scene.load.baseURL,
+                    crossOrigin: this.scene.load.crossOrigin
+                });
+            }
+        } catch (error) {
+            logger.error(this.moduleName, 'Error setting up loading configuration', {
+                error: error.message
+            });
+        }
+    }
+
+    setupLoadingListeners() {
+        try {
+            this.scene.load.on('filecomplete', (key, type, data) => {
+                if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                    logger.debug(this.moduleName, 'Asset loaded', {
+                        key,
+                        type,
+                        dataSize: data ? data.length || 0 : 0
+                    });
+                }
+            });
+
+            this.scene.load.on('complete', () => {
+                logger.info(this.moduleName, 'All assets loaded', {
+                    status: this.assetsLoaded
+                });
+            });
+
+            this.scene.load.on('loaderror', (file) => {
+                logger.error(this.moduleName, 'Asset loading error', {
+                    key: file.key,
+                    type: file.type,
+                    url: file.url
+                });
+            });
+        } catch (error) {
+            logger.error(this.moduleName, 'Error setting up loading listeners', {
+                error: error.message
+            });
+        }
     }
 
     loadBackgroundLayers() {
-        this.debugLog('Loading background layers', LAYER_INFO);
-        LAYER_INFO.forEach(layer => {
-            const path = `assets/background/${layer.file}`;
-            this.debugLog(`Loading image: ${layer.key} from ${path}`);
-            this.scene.load.image(layer.key, path);
-        });
+        try {
+            logger.info(this.moduleName, 'Loading background layers', {
+                layerCount: LAYER_INFO.length
+            });
+
+            LAYER_INFO.forEach(layer => {
+                const path = `assets/background/${layer.file}`;
+                
+                if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                    logger.debug(this.moduleName, 'Loading background layer', {
+                        key: layer.key,
+                        path
+                    });
+                }
+                
+                this.scene.load.image(layer.key, path);
+            });
+
+            this.assetsLoaded.background = true;
+        } catch (error) {
+            logger.error(this.moduleName, 'Error loading background layers', {
+                error: error.message
+            });
+        }
     }
 
     loadPlayerAssets() {
-        this.debugLog('Loading player assets');
-        AssetLoader.loadPlayerSprites(this.scene);
+        try {
+            logger.info(this.moduleName, 'Loading player assets');
+            
+            AssetLoader.loadPlayerSprites(this.scene);
+            this.assetsLoaded.player = true;
+            
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Player assets load triggered');
+            }
+        } catch (error) {
+            logger.error(this.moduleName, 'Error loading player assets', {
+                error: error.message
+            });
+        }
     }
 
     loadObstacleAssets() {
-        this.debugLog('Loading obstacle assets');
-        Object.entries(OBSTACLE_CONFIG.TYPES).forEach(([key, value]) => {
+        try {
+            logger.info(this.moduleName, 'Loading obstacle assets');
+            
+            Object.entries(OBSTACLE_CONFIG.TYPES).forEach(([key, value]) => {
+                this.loadObstacleAsset(key, value);
+            });
+
+            this.assetsLoaded.obstacles = true;
+        } catch (error) {
+            logger.error(this.moduleName, 'Error in obstacle assets loading', {
+                error: error.message
+            });
+        }
+    }
+
+    loadObstacleAsset(key, value) {
+        try {
             if (key === 'BEE') {
-                // Load bee sprite sheet
-                const path = `assets/obstacles/${value}.png`;
-                this.debugLog(`Loading obstacle sprite sheet: ${value} from ${path}`);
-                this.scene.load.spritesheet(value, path, {
-                    frameWidth: OBSTACLE_CONFIG.ANIMATIONS.BEE.frameWidth,
-                    frameHeight: OBSTACLE_CONFIG.ANIMATIONS.BEE.frameHeight
-                });
-                
-                // Add debug logging for sprite sheet dimensions
-                this.scene.load.on('filecomplete-spritesheet-' + value, (key, type, data) => {
-                    console.log('Loaded bee sprite sheet dimensions:', {
+                this.loadBeeObstacle(value);
+            } else {
+                this.loadStaticObstacle(value);
+            }
+        } catch (error) {
+            logger.error(this.moduleName, 'Error loading specific obstacle asset', {
+                key,
+                value,
+                error: error.message
+            });
+        }
+    }
+
+    loadBeeObstacle(value) {
+        const path = `assets/obstacles/${value}.png`;
+        const config = OBSTACLE_CONFIG.ANIMATIONS.BEE;
+        
+        this.scene.load.spritesheet(value, path, {
+            frameWidth: config.frameWidth,
+            frameHeight: config.frameHeight
+        });
+
+        // Add specific completed handler for bee sprite sheet
+        this.scene.load.on('filecomplete-spritesheet-' + value, (key, type, data) => {
+            if (debugOverlay.isDebugEnabled(this.moduleName)) {
+                logger.debug(this.moduleName, 'Bee sprite sheet loaded', {
+                    dimensions: {
                         totalWidth: data.width,
                         totalHeight: data.height,
-                        frameWidth: OBSTACLE_CONFIG.ANIMATIONS.BEE.frameWidth,
-                        frameHeight: OBSTACLE_CONFIG.ANIMATIONS.BEE.frameHeight,
-                        possibleFrames: Math.floor(data.width / OBSTACLE_CONFIG.ANIMATIONS.BEE.frameWidth)
-                    });
+                        frameWidth: config.frameWidth,
+                        frameHeight: config.frameHeight,
+                        frames: Math.floor(data.width / config.frameWidth)
+                    }
                 });
-            } else {
-                // Load regular obstacle sprites
-                const path = `assets/obstacles/${value}.png`;
-                this.debugLog(`Loading obstacle: ${value} from ${path}`);
-                this.scene.load.image(value, path);
             }
         });
-    }  
+    }
+
+    loadStaticObstacle(value) {
+        const path = `assets/obstacles/${value}.png`;
+        
+        if (debugOverlay.isDebugEnabled(this.moduleName)) {
+            logger.debug(this.moduleName, 'Loading static obstacle', {
+                value,
+                path
+            });
+        }
+        
+        this.scene.load.image(value, path);
+    }
+
+    getLoadingStatus() {
+        return {
+            ...this.assetsLoaded,
+            allComplete: Object.values(this.assetsLoaded).every(status => status)
+        };
+    }
 }

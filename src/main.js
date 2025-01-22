@@ -9,14 +9,14 @@ import { logger } from './utils/LogManager';
 if (process.env.NODE_ENV === 'development') {
     // Default debug settings for development
     debugOverlay.setModuleDebug('ParallaxBackground', false);
-    debugOverlay.setModuleDebug('ObstacleManager', true);
-    debugOverlay.setModuleDebug('ObstaclePool', true);
-    debugOverlay.setModuleDebug('ObstacleSpawner', true);
-    debugOverlay.setModuleDebug('GameOverHandler', true);
-    debugOverlay.setModuleDebug('DifficultyManager', true);
-    debugOverlay.setModuleDebug('ScoringSystem', true);
+    debugOverlay.setModuleDebug('ObstacleManager', false);
+    debugOverlay.setModuleDebug('ObstaclePool', false);
+    debugOverlay.setModuleDebug('ObstacleSpawner', false);
+    debugOverlay.setModuleDebug('GameOverHandler', false);
+    debugOverlay.setModuleDebug('DifficultyManager', false);
+    debugOverlay.setModuleDebug('ScoringSystem', false);
     debugOverlay.setModuleDebug('GameScene', true);
-    debugOverlay.setModuleDebug('GameSceneCollision', true);
+    debugOverlay.setModuleDebug('GameSceneCollision', false);
 } else {
     // Disable all debugging in production
     debugOverlay.setGlobalDebug(false);
