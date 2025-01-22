@@ -10,7 +10,7 @@ export const OBSTACLE_CONFIG = {
         MIN_DISTANCE: 250,
         MAX_DISTANCE: 750,
         INITIAL_DELAY: 2000,
-        BASE_SPEED: 180,     // Adjusted to match background movement
+        BASE_SPEED: 300,     // Adjusted to match background movement
         GROUP_CHANCE: 0.4,    
         GROUP_SIZE: {
             MIN: 2,          
@@ -32,12 +32,12 @@ export const OBSTACLE_CONFIG = {
         }
     },
     DIFFICULTY: {
-        SPEED_INCREMENT: 20,
+        SPEED_INCREMENT: 35, //Adjusted difficulty scaling for neww base speed 
         DISTANCE_DECREMENT: 50,
         INTERVAL: 15000,
         MIN_SPAWN_DISTANCE: 150,
         MAX_SPAWN_DISTANCE: 750,
-        MAX_SPEED: 1200
+        MAX_SPEED: 2000 // Increased to account for higher base speed
     },
     SCALE: {
         SMALL: 2,

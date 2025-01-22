@@ -113,22 +113,44 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update() {
-        if (this.isShuttingDown) {
-            return;
-        }
-
-        try {
-            this.updateBackground();
-            this.updateGameComponents();
+        if (this.isShuttingDown) return;
+    
+        if (this.background) {
+            this.background.update();
             
-            if (debugOverlay.isDebugEnabled(this.moduleName)) {
-                this.logUpdateStatus();
+            if (this.obstacleManager && this.background.getLayer1PixelsPerFrame) {
+                const layer1Speed = this.background.getLayer1PixelsPerFrame();
+                // Added requestAnimationFrame timing to smooth out movement
+                const deltaTime = 1000 / 60;  // Target 60 FPS
+                const pixelsPerSecond = (layer1Speed * deltaTime) * (60 / deltaTime);
+                const targetSpeed = pixelsPerSecond * 10;
+                
+                if (this.debugMode) {
+                    console.log('[GameScene] Syncing speeds:', {
+                        layer1Speed,
+                        pixelsPerSecond,
+                        targetSpeed,
+                        deltaTime
+                    });
+                }
+                
+                if (this.obstacleManager.spawner) {
+                    this.obstacleManager.spawner.updateSpeed(targetSpeed);
+                }
             }
-        } catch (error) {
-            logger.error(this.moduleName, 'Error during update cycle', {
-                error: error.message,
-                componentStatus: this.getComponentStatus()
-            });
+        }
+        
+        if (this.player) {
+            this.player.update();
+        }
+        if (this.obstacleManager) {
+            this.obstacleManager.update();
+        }
+        if (this.collision) {
+            this.collision.update();
+        }
+        if (this.scoringSystem) {
+            this.scoringSystem.update();
         }
     }
 

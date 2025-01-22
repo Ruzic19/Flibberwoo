@@ -18,6 +18,6 @@ export const GAME_CONFIG = {
         }
     },
     SCROLL_SPEED: {
-        BASE: 3
+        BASE: 5 // Changed from 3
     }
 };
