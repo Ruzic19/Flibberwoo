@@ -26,8 +26,14 @@ export class DebugOverlay {
                 PlayerHitbox: false,
                 GameScene: false,
                 GameSceneCollision: false
-            }
+            },
+            LOGS_ENABLED: {} // New object to track log toggles
         };
+
+        // Initialize log toggles for each module
+        Object.keys(this.config.MODULES).forEach(module => {
+            this.config.LOGS_ENABLED[module] = false;
+        });
         
         DebugOverlay.instance = this;
     }
@@ -37,7 +43,7 @@ export class DebugOverlay {
         
         this.game = game;
         this.createDebugPanel();
-        this.setupKeyboardShortcuts();
+        //this.setupKeyboardShortcuts(); ask CLaude what is this function here?
     }
 
     createDebugPanel() {
@@ -52,6 +58,8 @@ export class DebugOverlay {
         this.debugPanel.style.maxHeight = '80vh';
         this.debugPanel.style.overflowY = 'auto';
         this.debugPanel.style.borderRadius = '5px';
+        this.debugPanel.style.minWidth = '400px';
+        
         this.debugPanel.innerHTML = `
             <div style="margin-bottom: 10px;">
                 <label style="display: block; margin-bottom: 10px;">
@@ -59,7 +67,16 @@ export class DebugOverlay {
                 </label>
                 <button id="togglePanel" style="margin-bottom: 10px; padding: 5px 10px;">Hide Panel</button>
             </div>
-            <div id="moduleToggles"></div>
+            <div style="display: flex; justify-content: space-between;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 14px;">Debug Logs</h3>
+                    <div id="logToggles"></div>
+                </div>
+                <div style="flex: 1; margin-left: 20px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 14px;">Visual Debug</h3>
+                    <div id="moduleToggles"></div>
+                </div>
+            </div>
         `;
 
         document.body.appendChild(this.debugPanel);
@@ -75,28 +92,49 @@ export class DebugOverlay {
         globalToggle.addEventListener('change', (e) => {
             const enabled = e.target.checked;
             this.setGlobalDebug(enabled);
-            this.updateModuleToggles();
+            this.updateAllToggles();
         });
     }
 
     createModuleToggles() {
         this.moduleToggles = document.getElementById('moduleToggles');
+        const logToggles = document.getElementById('logToggles');
         
         Object.keys(this.config.MODULES).forEach(moduleName => {
-            const label = document.createElement('label');
-            label.style.display = 'block';
-            label.style.marginBottom = '5px';
-            label.style.cursor = 'pointer';
-            label.innerHTML = `
+            // Create visual debug toggle
+            const visualLabel = document.createElement('label');
+            visualLabel.style.display = 'block';
+            visualLabel.style.marginBottom = '5px';
+            visualLabel.style.cursor = 'pointer';
+            visualLabel.innerHTML = `
                 <input type="checkbox" data-module="${moduleName}"> ${moduleName}
             `;
-            this.moduleToggles.appendChild(label);
+            this.moduleToggles.appendChild(visualLabel);
 
-            const checkbox = label.querySelector('input');
-            checkbox.checked = this.config.MODULES[moduleName];
-            checkbox.addEventListener('change', (e) => {
+            // Create log toggle
+            const logLabel = document.createElement('label');
+            logLabel.style.display = 'block';
+            logLabel.style.marginBottom = '5px';
+            logLabel.style.cursor = 'pointer';
+            logLabel.innerHTML = `
+                <input type="checkbox" data-log-module="${moduleName}"> ${moduleName}
+            `;
+            logToggles.appendChild(logLabel);
+
+            // Setup visual debug checkbox
+            const visualCheckbox = visualLabel.querySelector('input');
+            visualCheckbox.checked = this.config.MODULES[moduleName];
+            visualCheckbox.addEventListener('change', (e) => {
                 const enabled = e.target.checked;
                 this.setModuleDebug(moduleName, enabled);
+            });
+
+            // Setup log checkbox
+            const logCheckbox = logLabel.querySelector('input');
+            logCheckbox.checked = this.config.LOGS_ENABLED[moduleName];
+            logCheckbox.addEventListener('change', (e) => {
+                const enabled = e.target.checked;
+                this.setModuleLogs(moduleName, enabled);
             });
         });
     }
@@ -107,24 +145,27 @@ export class DebugOverlay {
 
         togglePanel.addEventListener('click', () => {
             isPanelVisible = !isPanelVisible;
-            this.moduleToggles.style.display = isPanelVisible ? 'block' : 'none';
+            const contentDivs = this.debugPanel.querySelectorAll('div[style*="flex"]');
+            contentDivs.forEach(div => {
+                div.style.display = isPanelVisible ? 'flex' : 'none';
+            });
             togglePanel.textContent = isPanelVisible ? 'Hide Panel' : 'Show Panel';
             this.debugPanel.style.backgroundColor = isPanelVisible ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.3)';
         });
     }
 
-    updateModuleToggles() {
-        const checkboxes = this.moduleToggles.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
+    updateAllToggles() {
+        // Update visual debug toggles
+        const visualCheckboxes = this.moduleToggles.querySelectorAll('input[type="checkbox"]');
+        visualCheckboxes.forEach(checkbox => {
             checkbox.checked = this.config.GLOBAL || this.config.MODULES[checkbox.dataset.module];
         });
-    }
 
-    setupKeyboardShortcuts() {
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '`') {  // backtick key
-                document.getElementById('togglePanel').click();
-            }
+        // Update log toggles
+        const logCheckboxes = document.querySelectorAll('input[data-log-module]');
+        logCheckboxes.forEach(checkbox => {
+            const moduleName = checkbox.dataset.logModule;
+            checkbox.checked = this.config.GLOBAL || this.config.LOGS_ENABLED[moduleName];
         });
     }
 
@@ -135,16 +176,46 @@ export class DebugOverlay {
         }
     }
 
+    setModuleLogs(moduleName, enabled) {
+        if (this.config.LOGS_ENABLED.hasOwnProperty(moduleName)) {
+            this.config.LOGS_ENABLED[moduleName] = enabled;
+            // If logs are disabled, mute the module in LogManager
+            const logger = window.logger || console;
+            if (logger.muteModule && logger.unmuteModule) {
+                if (enabled) {
+                    logger.unmuteModule(moduleName);
+                } else {
+                    logger.muteModule(moduleName);
+                }
+            }
+        }
+    }
+
     setGlobalDebug(enabled) {
         this.config.GLOBAL = enabled;
         Object.keys(this.config.MODULES).forEach(module => {
             this.config.MODULES[module] = enabled;
+            this.config.LOGS_ENABLED[module] = enabled;
+            
+            // Update LogManager muting
+            const logger = window.logger || console;
+            if (logger.muteModule && logger.unmuteModule) {
+                if (enabled) {
+                    logger.unmuteModule(module);
+                } else {
+                    logger.muteModule(module);
+                }
+            }
         });
         this.updateDebugGraphics();
     }
 
     isDebugEnabled(moduleName) {
         return this.config.GLOBAL || this.config.MODULES[moduleName];
+    }
+
+    isLoggingEnabled(moduleName) {
+        return this.config.GLOBAL || this.config.LOGS_ENABLED[moduleName];
     }
 
     updateDebugGraphics() {

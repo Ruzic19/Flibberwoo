@@ -3,7 +3,7 @@ import { debugOverlay } from '../debug/DebugOverlay';
 
 export class LogManager {
     static instance = null;
-    
+
     constructor() {
         if (LogManager.instance) {
             return LogManager.instance;
@@ -11,8 +11,8 @@ export class LogManager {
         
         this.logHistory = [];
         this.maxHistorySize = 1000;
+        this.mutedModules = new Set();
         
-        // Log levels
         this.LOG_LEVELS = {
             DEBUG: 'debug',
             INFO: 'info',
@@ -20,9 +20,13 @@ export class LogManager {
             ERROR: 'error'
         };
 
+        // Make logger available globally for DebugOverlay
+        window.logger = this;
+
         LogManager.instance = this;
     }
 
+    // Add static getInstance method
     static getInstance() {
         if (!LogManager.instance) {
             LogManager.instance = new LogManager();
@@ -30,14 +34,29 @@ export class LogManager {
         return LogManager.instance;
     }
 
-    // Check if debugging is enabled for a module through DebugOverlay
-    isDebugEnabled(moduleName) {
-        return debugOverlay.isDebugEnabled(moduleName);
+    muteModule(moduleName) {
+        this.mutedModules.add(moduleName);
     }
 
-    // Main logging method
+    unmuteModule(moduleName) {
+        this.mutedModules.delete(moduleName);
+    }
+
+    isModuleMuted(moduleName) {
+        return this.mutedModules.has(moduleName);
+    }
+
+    isDebugEnabled(moduleName) {
+        return debugOverlay.isLoggingEnabled(moduleName);
+    }
+
     log(moduleName, message, data = null, level = 'debug') {
-        // Only log debug messages if debugging is enabled for this module
+        // Skip if module is muted
+        if (this.isModuleMuted(moduleName)) {
+            return;
+        }
+
+        // For debug level, check both debug overlay and module muting
         if (level === this.LOG_LEVELS.DEBUG && !this.isDebugEnabled(moduleName)) {
             return;
         }
@@ -51,16 +70,12 @@ export class LogManager {
             level
         };
 
-        // Add to history
         this.logHistory.push(logEntry);
         if (this.logHistory.length > this.maxHistorySize) {
             this.logHistory.shift();
         }
 
-        // Format the console output
         const formattedMessage = `[${timestamp}] [${moduleName}] ${message}`;
-        
-        // Add visual indicator for debug messages
         const debugIndicator = level === this.LOG_LEVELS.DEBUG ? '[DEBUG] ' : '';
         const finalMessage = debugIndicator + formattedMessage;
         
@@ -79,7 +94,6 @@ export class LogManager {
         }
     }
 
-    // Convenience methods for different log levels
     debug(moduleName, message, data = null) {
         this.log(moduleName, message, data, this.LOG_LEVELS.DEBUG);
     }
@@ -96,17 +110,14 @@ export class LogManager {
         this.log(moduleName, message, data, this.LOG_LEVELS.ERROR);
     }
 
-    // Get log history
     getHistory() {
         return [...this.logHistory];
     }
 
-    // Clear log history
     clearHistory() {
         this.logHistory = [];
     }
 
-    // Export logs
     exportLogs() {
         return JSON.stringify(this.logHistory, null, 2);
     }
