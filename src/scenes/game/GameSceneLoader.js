@@ -12,12 +12,11 @@ export class GameSceneLoader {
         this.assetsLoaded = {
             background: false,
             player: false,
-            obstacles: false
+            obstacles: false,
+            ui: false
         };
         
-        // Enable debug for this module through DebugOverlay
         debugOverlay.setModuleDebug(this.moduleName, true);
-        
         logger.info(this.moduleName, 'Initializing game scene loader');
     }
 
@@ -32,12 +31,31 @@ export class GameSceneLoader {
             this.loadBackgroundLayers();
             this.loadPlayerAssets();
             this.loadObstacleAssets();
+            this.loadUIAssets();
             
             logger.info(this.moduleName, 'Asset loading initiated');
         } catch (error) {
             logger.error(this.moduleName, 'Error initiating asset loading', {
                 error: error.message,
                 stack: error.stack
+            });
+        }
+    }
+
+    loadUIAssets() {
+        try {
+            logger.info(this.moduleName, 'Loading UI assets');
+            // Load UI icons
+            this.scene.load.image('gear', 'assets/ui/gear.png');
+            this.scene.load.image('home', 'assets/ui/home.png');
+            this.scene.load.image('return', 'assets/ui/return.png');
+            this.scene.load.image('musicOn', 'assets/ui/musicOn.png');
+            this.scene.load.image('right', 'assets/ui/right.png');
+            
+            this.assetsLoaded.ui = true;
+        } catch (error) {
+            logger.error(this.moduleName, 'Error loading UI assets', {
+                error: error.message
             });
         }
     }

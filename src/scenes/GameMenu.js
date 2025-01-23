@@ -11,6 +11,13 @@ export default class GameMenu extends Phaser.Scene {
         this.load.baseURL = '/';
         this.load.crossOrigin = 'anonymous';
         
+        // Load UI assets first
+        this.load.image('gear', 'assets/ui/gear.png');
+        this.load.image('home', 'assets/ui/home.png');
+        this.load.image('return', 'assets/ui/return.png');
+        this.load.image('musicOn', 'assets/ui/musicOn.png');
+        this.load.image('right', 'assets/ui/right.png');
+        
         LAYER_INFO.forEach(layer => {
             const path = `assets/background/${layer.file}`;
             this.load.image(layer.key, path);

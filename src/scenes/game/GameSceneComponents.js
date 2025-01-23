@@ -18,12 +18,11 @@ export class GameSceneComponents {
             player: null,
             obstacleManager: null,
             difficultyManager: null,
-            scoringSystem: null
+            scoringSystem: null,
+            optionsButton: null
         };
         
-        // Enable debug for this module through DebugOverlay
         debugOverlay.setModuleDebug(this.moduleName, true);
-        
         logger.info(this.moduleName, 'Initializing game scene components manager');
     }
 
@@ -36,6 +35,7 @@ export class GameSceneComponents {
             this.createObstacleSystem();
             this.createDifficultyManager();
             this.createScoringSystem();
+            this.components.optionsButton = this.createOptionsButton();
             
             if (debugOverlay.isDebugEnabled(this.moduleName)) {
                 logger.debug(this.moduleName, 'Components created', {
@@ -52,6 +52,38 @@ export class GameSceneComponents {
             });
             throw error;
         }
+    }
+
+    createOptionsButton() {
+        logger.info(this.moduleName, 'Creating options button');
+        
+        const optionsButton = this.scene.add.image(40, 40, 'gear')
+            .setScrollFactor(0)
+            .setDepth(1000)
+            .setScale(0.5)
+            .setInteractive({ useHandCursor: true });
+    
+        optionsButton.on('pointerover', () => {
+            optionsButton.setTint(0xffff00);
+            logger.debug(this.moduleName, 'Options button hover');
+        });
+        
+        optionsButton.on('pointerout', () => {
+            optionsButton.clearTint();
+        });
+    
+        optionsButton.on('pointerdown', () => {
+            logger.info(this.moduleName, 'Options button clicked');
+            this.scene.scene.launch('OptionsMenu');
+        });
+    
+        logger.info(this.moduleName, 'Options button created', {
+            position: { x: optionsButton.x, y: optionsButton.y },
+            scale: optionsButton.scale,
+            depth: optionsButton.depth
+        });
+    
+        return optionsButton;
     }
 
     createBackground() {

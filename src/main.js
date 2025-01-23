@@ -2,6 +2,7 @@
 import Phaser from "phaser";
 import GameMenu from "./scenes/GameMenu";
 import GameScene from "./scenes/game/GameScene";
+import OptionsMenu from "./scenes/OptionsMenu";
 import { debugOverlay } from './debug/DebugOverlay';
 import { logger } from './utils/LogManager';
 
@@ -29,7 +30,7 @@ const config = {
     height: 450,
     parent: 'game',
     backgroundColor: '#000000',
-    scene: [GameMenu, GameScene],
+    scene: [GameMenu, GameScene,OptionsMenu],
     render: {
         pixelArt: true,
         antialias: false,
